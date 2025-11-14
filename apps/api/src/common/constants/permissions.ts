@@ -34,3 +34,64 @@ export const PERMISSIONS = {
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
 
 export const ALL_PERMISSIONS: string[] = Object.values(PERMISSIONS);
+
+const P = PERMISSIONS;
+
+export const ROLE_PRESETS: Record<string, { description: string; permissions: string[] }> = {
+  admin: { description: '系統管理員', permissions: ALL_PERMISSIONS },
+  sales: {
+    description: '業務',
+    permissions: [
+      P.CUSTOMER_READ,
+      P.CUSTOMER_WRITE,
+      P.PRODUCT_READ,
+      P.SALES_READ,
+      P.SALES_WRITE,
+      P.SALES_CONFIRM,
+      P.INVENTORY_READ,
+      P.REPORT_READ,
+    ],
+  },
+  purchaser: {
+    description: '採購',
+    permissions: [
+      P.SUPPLIER_READ,
+      P.SUPPLIER_WRITE,
+      P.PRODUCT_READ,
+      P.PURCHASE_READ,
+      P.PURCHASE_WRITE,
+      P.PURCHASE_APPROVE,
+      P.INVENTORY_READ,
+    ],
+  },
+  warehouse: {
+    description: '倉管',
+    permissions: [
+      P.PRODUCT_READ,
+      P.WAREHOUSE_READ,
+      P.WAREHOUSE_WRITE,
+      P.INVENTORY_READ,
+      P.INVENTORY_ADJUST,
+      P.PURCHASE_READ,
+      P.PURCHASE_RECEIVE,
+      P.SALES_READ,
+      P.SALES_SHIP,
+    ],
+  },
+  finance: {
+    description: '財務',
+    permissions: [
+      P.ACCOUNTING_READ,
+      P.ACCOUNTING_WRITE,
+      P.PAYROLL_READ,
+      P.PAYROLL_WRITE,
+      P.REPORT_READ,
+      P.PURCHASE_READ,
+      P.SALES_READ,
+    ],
+  },
+  hr: {
+    description: '人資',
+    permissions: [P.HR_READ, P.HR_WRITE, P.PAYROLL_READ],
+  },
+};
