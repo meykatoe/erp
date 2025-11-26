@@ -9,4 +9,13 @@ describe('money', () => {
   it('明細金額為數量乘單價', () => {
     expect(lineAmount(3, '10.5').toString()).toBe('31.5');
   });
+
+  it('加總不產生浮點誤差', () => {
+    expect(sum([0.1, 0.2]).toString()).toBe('0.3');
+  });
+
+  it('移動平均成本', () => {
+    expect(movingAverage(10, 100, 10, 200).toString()).toBe('150');
+    expect(movingAverage(0, 0, 5, 80).toString()).toBe('80');
+  });
 });
