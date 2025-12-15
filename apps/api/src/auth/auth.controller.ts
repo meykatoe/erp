@@ -15,4 +15,9 @@ export class AuthController {
   login(@Body() dto: LoginDto) {
     return this.service.login(dto.email, dto.password);
   }
+
+  @Get('me')
+  me(@CurrentUser() user: AuthUser) {
+    return user;
+  }
 }
