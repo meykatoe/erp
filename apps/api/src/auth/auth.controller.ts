@@ -20,4 +20,9 @@ export class AuthController {
   me(@CurrentUser() user: AuthUser) {
     return user;
   }
+
+  @Post('change-password')
+  changePassword(@CurrentUser() user: AuthUser, @Body() dto: ChangePasswordDto) {
+    return this.service.changePassword(user.id, dto.oldPassword, dto.newPassword);
+  }
 }
