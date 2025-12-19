@@ -17,3 +17,18 @@ export class CreateUserDto {
   @IsString({ each: true })
   roleIds?: string[];
 }
+
+export class UpdateUserDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  roleIds?: string[];
+}
