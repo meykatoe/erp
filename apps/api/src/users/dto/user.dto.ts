@@ -32,3 +32,9 @@ export class UpdateUserDto {
   @IsString({ each: true })
   roleIds?: string[];
 }
+
+export class ResetPasswordDto {
+  @IsString()
+  @MinLength(8, { message: '密碼至少 8 碼' })
+  password!: string;
+}
