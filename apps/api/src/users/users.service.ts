@@ -38,4 +38,16 @@ export class UsersService {
   get(id: string) {
     return this.prisma.user.findUniqueOrThrow({ where: { id }, select });
   }
+
+  async create(dto: CreateUserDto) {
+    return this.prisma.user.create({
+      data: {
+        email: dto.email.toLowerCase(),
+        name: dto.name,
+        passwordHash: await bcrypt.hash(dto.password, 10),
+        roles: { create: (dto.roleIds ?? []).map((roleId) => ({ roleId })) },
+      },
+      select,
+    });
+  }
 }
