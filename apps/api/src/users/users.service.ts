@@ -50,4 +50,20 @@ export class UsersService {
       select,
     });
   }
+
+  async update(id: string, dto: UpdateUserDto) {
+    return this.prisma.$transaction(async (tx) => {
+      if (dto.roleIds) {
+        await tx.userRole.deleteMany({ where: { userId: id } });
+        await tx.userRole.createMany({
+          data: dto.roleIds.map((roleId) => ({ userId: id, roleId })),
+        });
+      }
+      return tx.user.update({
+        where: { id },
+        data: { name: dto.name, active: dto.active },
+        select,
+      });
+    });
+  }
 }
