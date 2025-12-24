@@ -66,4 +66,12 @@ export class UsersService {
       });
     });
   }
+
+  async resetPassword(id: string, password: string) {
+    await this.prisma.user.update({
+      where: { id },
+      data: { passwordHash: await bcrypt.hash(password, 10) },
+    });
+    return { ok: true };
+  }
 }
