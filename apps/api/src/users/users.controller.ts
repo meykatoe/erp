@@ -20,4 +20,16 @@ export class UsersController {
   get(@Param('id') id: string) {
     return this.service.get(id);
   }
+
+  @Post()
+  @Perm(PERMISSIONS.USER_WRITE)
+  create(@Body() dto: CreateUserDto) {
+    return this.service.create(dto);
+  }
+
+  @Patch(':id')
+  @Perm(PERMISSIONS.USER_WRITE)
+  update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
+    return this.service.update(id, dto);
+  }
 }
