@@ -32,4 +32,10 @@ export class UsersController {
   update(@Param('id') id: string, @Body() dto: UpdateUserDto) {
     return this.service.update(id, dto);
   }
+
+  @Post(':id/reset-password')
+  @Perm(PERMISSIONS.USER_WRITE)
+  reset(@Param('id') id: string, @Body() dto: ResetPasswordDto) {
+    return this.service.resetPassword(id, dto.password);
+  }
 }
