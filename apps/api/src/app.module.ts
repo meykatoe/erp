@@ -10,6 +10,7 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { SequenceModule } from './sequence/sequence.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { SequenceModule } from './sequence/sequence.module';
     SequenceModule,
     AuditModule,
     AuthModule,
+    UsersModule,
     HealthModule,
   ],
   providers: [
