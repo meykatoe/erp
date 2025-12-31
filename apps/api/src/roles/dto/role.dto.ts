@@ -13,3 +13,14 @@ export class CreateRoleDto {
   @IsString({ each: true })
   permissions!: string[];
 }
+
+export class UpdateRoleDto {
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  permissions?: string[];
+}
