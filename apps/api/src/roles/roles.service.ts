@@ -27,4 +27,9 @@ export class RolesService {
     assertValidPermissions(dto.permissions);
     return this.prisma.role.create({ data: dto });
   }
+
+  update(id: string, dto: UpdateRoleDto) {
+    if (dto.permissions) assertValidPermissions(dto.permissions);
+    return this.prisma.role.update({ where: { id }, data: dto });
+  }
 }
