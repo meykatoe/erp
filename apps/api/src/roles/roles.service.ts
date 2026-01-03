@@ -32,4 +32,15 @@ export class RolesService {
     if (dto.permissions) assertValidPermissions(dto.permissions);
     return this.prisma.role.update({ where: { id }, data: dto });
   }
+
+  async remove(id: string) {
+    const role = await this.prisma.role.findUniqueOrThrow({
+      where: { id },
+      include: { _count: { select: { users: true } } },
+    });
+    if (role.name === 'admin') throw new BadRequestException('不可刪除管理員角色');
+    if (role._count.users > 0) throw new BadRequestException('仍有使用者使用此角色');
+    await this.prisma.role.delete({ where: { id } });
+    return { ok: true };
+  }
 }
