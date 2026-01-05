@@ -19,4 +19,16 @@ export class RolesController {
   permissions() {
     return this.service.permissions();
   }
+
+  @Post()
+  @Perm(PERMISSIONS.ROLE_WRITE)
+  create(@Body() dto: CreateRoleDto) {
+    return this.service.create(dto);
+  }
+
+  @Patch(':id')
+  @Perm(PERMISSIONS.ROLE_WRITE)
+  update(@Param('id') id: string, @Body() dto: UpdateRoleDto) {
+    return this.service.update(id, dto);
+  }
 }
