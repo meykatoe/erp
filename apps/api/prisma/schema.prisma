@@ -55,3 +55,70 @@ model NumberSequence {
   key     String @id
   current Int    @default(0)
 }
+
+model Category {
+  id       String     @id @default(uuid())
+  name     String     @unique
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Product {
+  id           String    @id @default(uuid())
+  sku          String    @unique
+  name         String
+  categoryId   String?
+  category     Category? @relation(fields: [categoryId], references: [id])
+  unit         String    @default("PCS")
+  price        Decimal   @default(0) @db.Decimal(18, 2)
+  cost         Decimal   @default(0) @db.Decimal(18, 4)
+  reorderPoint Decimal   @default(0) @db.Decimal(18, 3)
+  active       Boolean   @default(true)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([name])
+}
+
+model Warehouse {
+  id      String  @id @default(uuid())
+  code    String  @unique
+  name    String
+  address String?
+  active  Boolean @default(true)
+}
+
+model Customer {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  contact     String?
+  phone       String?
+  email       String?
+  address     String?
+  taxId       String?
+  creditLimit Decimal  @default(0) @db.Decimal(18, 2)
+  termDays    Int      @default(30)
+  active      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@index([name])
+}
+
+model Supplier {
+  id        String   @id @default(uuid())
+  code      String   @unique
+  name      String
+  contact   String?
+  phone     String?
+  email     String?
+  address   String?
+  taxId     String?
+  termDays  Int      @default(30)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([name])
+}
