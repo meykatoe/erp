@@ -16,4 +16,9 @@ export class CategoriesService {
   create(dto: CreateCategoryDto) {
     return this.prisma.category.create({ data: dto });
   }
+
+  async update(id: string, dto: UpdateCategoryDto) {
+    if (dto.parentId === id) throw new BadRequestException('分類不可以是自己的上層');
+    return this.prisma.category.update({ where: { id }, data: dto });
+  }
 }
