@@ -61,3 +61,14 @@ export class UpdateProductDto {
   @IsBoolean()
   active?: boolean;
 }
+
+export class ProductQueryDto extends PageQueryDto {
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
+  @IsBoolean()
+  active?: boolean;
+}
