@@ -33,3 +33,31 @@ export class CreateProductDto {
   @Min(0)
   reorderPoint?: number;
 }
+
+export class UpdateProductDto {
+  @IsOptional()
+  @IsString()
+  name?: string;
+
+  @IsOptional()
+  @IsString()
+  categoryId?: string;
+
+  @IsOptional()
+  @IsString()
+  unit?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  price?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  reorderPoint?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  active?: boolean;
+}
