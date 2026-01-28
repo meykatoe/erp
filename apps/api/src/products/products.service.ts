@@ -30,4 +30,15 @@ export class ProductsService {
     ]);
     return toPage(items, total, q);
   }
+
+  get(id: string) {
+    return this.prisma.product.findUniqueOrThrow({
+      where: { id },
+      include: { category: true, stocks: { include: { warehouse: true } } },
+    });
+  }
+
+  create(dto: CreateProductDto) {
+    return this.prisma.product.create({ data: dto });
+  }
 }
