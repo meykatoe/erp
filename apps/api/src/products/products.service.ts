@@ -41,4 +41,8 @@ export class ProductsService {
   create(dto: CreateProductDto) {
     return this.prisma.product.create({ data: dto });
   }
+
+  update(id: string, dto: UpdateProductDto) {
+    return this.prisma.product.update({ where: { id }, data: dto });
+  }
 }
