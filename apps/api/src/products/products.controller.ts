@@ -19,4 +19,16 @@ export class ProductsController {
   get(@Param('id') id: string) {
     return this.service.get(id);
   }
+
+  @Post()
+  @Perm(PERMISSIONS.PRODUCT_WRITE)
+  create(@Body() dto: CreateProductDto) {
+    return this.service.create(dto);
+  }
+
+  @Patch(':id')
+  @Perm(PERMISSIONS.PRODUCT_WRITE)
+  update(@Param('id') id: string, @Body() dto: UpdateProductDto) {
+    return this.service.update(id, dto);
+  }
 }
