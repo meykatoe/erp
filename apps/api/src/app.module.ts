@@ -9,6 +9,7 @@ import { JwtAuthGuard } from './common/guards/jwt-auth.guard';
 import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
+import { WarehousesModule } from './warehouses/warehouses.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RolesModule } from './roles/roles.module';
@@ -27,6 +28,7 @@ import { UsersModule } from './users/users.module';
     RolesModule,
     CategoriesModule,
     ProductsModule,
+    WarehousesModule,
     HealthModule,
   ],
   providers: [
