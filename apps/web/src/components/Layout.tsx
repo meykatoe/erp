@@ -62,3 +62,41 @@ const NAV: { group: string; items: Item[] }[] = [
     ],
   },
 ];
+
+export function Layout() {
+  const { user, logout, can } = useAuth();
+
+  return (
+    <div className="shell">
+      <aside>
+        <div className="brand">ERP</div>
+        <nav>
+          {NAV.map((g) => {
+            const items = g.items.filter((i) => !i.perm || can(i.perm));
+            if (items.length === 0) return null;
+            return (
+              <div key={g.group} className="nav-group">
+                <div className="nav-title">{g.group}</div>
+                {items.map((i) => (
+                  <NavLink key={i.to} to={i.to} end className={({ isActive }) => (isActive ? 'active' : '')}>
+                    {i.label}
+                  </NavLink>
+                ))}
+              </div>
+            );
+          })}
+        </nav>
+      </aside>
+      <div className="main">
+        <header className="topbar">
+          <span>{user?.name}</span>
+          <NavLink to="/password">修改密碼</NavLink>
+          <button onClick={logout}>登出</button>
+        </header>
+        <main>
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
