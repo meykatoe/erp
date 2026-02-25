@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { Layout } from './components/Layout';
+import { ChangePassword } from './pages/ChangePassword';
 import { Login } from './pages/Login';
 
 function RequireAuth({ children }: { children: ReactNode }) {
@@ -21,6 +22,7 @@ export default function App() {
           </RequireAuth>
         }
       >
+        <Route path="password" element={<ChangePassword />} />
 
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
