@@ -29,3 +29,23 @@ export function usePaged<T>(path: string, extra: Record<string, string | undefin
 
   return { data, loading, error, page, setPage, search, reload };
 }
+
+export function useList<T>(path: string) {
+  const [data, setData] = useState<T[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const reload = useCallback(() => {
+    setLoading(true);
+    api<T[]>(path)
+      .then((d) => {
+        setData(d);
+        setError('');
+      })
+      .catch((e) => setError(e.message))
+      .finally(() => setLoading(false));
+  }, [path]);
+
+  useEffect(reload, [reload]);
+  return { data, loading, error, reload };
+}
