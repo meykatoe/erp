@@ -35,3 +35,26 @@ interface Props<T> {
 }
 
 type Row = { id: string } & Record<string, unknown>;
+
+function initialValues(fields: FieldDef[], row?: Row) {
+  const v: Record<string, unknown> = {};
+  for (const f of fields) {
+    const cur = row?.[f.name];
+    v[f.name] = cur ?? (f.type === 'checkbox' ? true : '');
+    if (f.type === 'date' && typeof cur === 'string') v[f.name] = cur.slice(0, 10);
+  }
+  return v;
+}
+
+function toBody(fields: FieldDef[], values: Record<string, unknown>, editing: boolean) {
+  const body: Record<string, unknown> = {};
+  for (const f of fields) {
+    if (editing && f.createOnly) continue;
+    if (!editing && f.editOnly) continue;
+    const v = values[f.name];
+    if (f.type === 'checkbox') body[f.name] = !!v;
+    else if (v === '' || v === undefined) continue;
+    else body[f.name] = f.type === 'number' ? Number(v) : v;
+  }
+  return body;
+}
