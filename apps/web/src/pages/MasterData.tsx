@@ -43,3 +43,48 @@ export function ProductsPage() {
     />
   );
 }
+
+export function CategoriesPage() {
+  const { options } = useOptions<Row>('/categories', (c) => c.name);
+  return (
+    <CrudPage<Row>
+      title="商品分類"
+      endpoint="/categories"
+      readPerm="product:read"
+      writePerm="product:write"
+      paged={false}
+      fields={[
+        { name: 'name', label: '名稱', required: true },
+        { name: 'parentId', label: '上層分類', type: 'select', options },
+      ]}
+      columns={[
+        { key: 'name', label: '名稱' },
+        { key: 'count', label: '商品數', align: 'right', render: (r) => r._count?.products ?? 0 },
+      ]}
+    />
+  );
+}
+
+export function WarehousesPage() {
+  return (
+    <CrudPage<Row>
+      title="倉庫"
+      endpoint="/warehouses"
+      readPerm="warehouse:read"
+      writePerm="warehouse:write"
+      paged={false}
+      fields={[
+        { name: 'code', label: '代碼', required: true, createOnly: true },
+        { name: 'name', label: '名稱', required: true },
+        { name: 'address', label: '地址' },
+        { name: 'active', label: '啟用', type: 'checkbox', editOnly: true },
+      ]}
+      columns={[
+        { key: 'code', label: '代碼' },
+        { key: 'name', label: '名稱' },
+        { key: 'address', label: '地址' },
+        activeCol,
+      ]}
+    />
+  );
+}
