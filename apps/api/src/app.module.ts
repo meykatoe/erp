@@ -10,6 +10,7 @@ import { PermissionsGuard } from './common/guards/permissions.guard';
 import { CategoriesModule } from './categories/categories.module';
 import { ProductsModule } from './products/products.module';
 import { WarehousesModule } from './warehouses/warehouses.module';
+import { CustomersModule } from './customers/customers.module';
 import { HealthModule } from './health/health.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RolesModule } from './roles/roles.module';
@@ -29,6 +30,7 @@ import { UsersModule } from './users/users.module';
     CategoriesModule,
     ProductsModule,
     WarehousesModule,
+    CustomersModule,
     HealthModule,
   ],
   providers: [
