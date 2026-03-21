@@ -88,3 +88,28 @@ export function WarehousesPage() {
     />
   );
 }
+
+const partyFields = (credit: boolean): FieldDef[] => [
+  { name: 'code', label: '代碼', required: true, createOnly: true },
+  { name: 'name', label: '名稱', required: true },
+  { name: 'contact', label: '聯絡人' },
+  { name: 'phone', label: '電話' },
+  { name: 'email', label: '電子郵件', type: 'email' },
+  { name: 'taxId', label: '統一編號' },
+  { name: 'address', label: '地址' },
+  { name: 'termDays', label: '付款天數', type: 'number', step: '1' },
+  ...(credit ? [{ name: 'creditLimit', label: '信用額度', type: 'number' } as FieldDef] : []),
+  { name: 'active', label: '啟用', type: 'checkbox', editOnly: true },
+];
+
+const partyColumns = (credit: boolean): Column<Row>[] => [
+  { key: 'code', label: '代碼' },
+  { key: 'name', label: '名稱' },
+  { key: 'contact', label: '聯絡人' },
+  { key: 'phone', label: '電話' },
+  { key: 'termDays', label: '付款天數', align: 'right' },
+  ...(credit
+    ? [{ key: 'creditLimit', label: '信用額度', align: 'right', render: (r: Row) => money(r.creditLimit) } as Column<Row>]
+    : []),
+  activeCol,
+];
