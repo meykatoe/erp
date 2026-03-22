@@ -113,3 +113,29 @@ const partyColumns = (credit: boolean): Column<Row>[] => [
     : []),
   activeCol,
 ];
+
+export function CustomersPage() {
+  return (
+    <CrudPage<Row>
+      title="客戶"
+      endpoint="/customers"
+      readPerm="customer:read"
+      writePerm="customer:write"
+      fields={partyFields(true)}
+      columns={partyColumns(true)}
+    />
+  );
+}
+
+export function SuppliersPage() {
+  return (
+    <CrudPage<Row>
+      title="供應商"
+      endpoint="/suppliers"
+      readPerm="supplier:read"
+      writePerm="supplier:write"
+      fields={partyFields(false)}
+      columns={partyColumns(false)}
+    />
+  );
+}
