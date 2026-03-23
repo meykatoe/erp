@@ -4,7 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { Layout } from './components/Layout';
 import { ChangePassword } from './pages/ChangePassword';
 import { Login } from './pages/Login';
-import { CategoriesPage, ProductsPage, WarehousesPage } from './pages/MasterData';
+import { CategoriesPage, CustomersPage, ProductsPage, SuppliersPage, WarehousesPage } from './pages/MasterData';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -24,6 +24,10 @@ export default function App() {
         }
       >
         <Route path="password" element={<ChangePassword />} />
+
+        <Route path="customers" element={<CustomersPage />} />
+
+        <Route path="suppliers" element={<SuppliersPage />} />
 
         <Route path="products" element={<ProductsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
