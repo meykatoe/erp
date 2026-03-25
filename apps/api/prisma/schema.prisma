@@ -7,6 +7,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum JournalStatus {
+  POSTED
+  REVERSED
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -121,4 +134,43 @@ model Supplier {
   createdAt DateTime @default(now())
 
   @@index([name])
+}
+
+model Account {
+  id       String        @id @default(uuid())
+  code     String        @unique
+  name     String
+  type     AccountType
+  parentId String?
+  active   Boolean       @default(true)
+  parent   Account?      @relation("AccountTree", fields: [parentId], references: [id])
+  children Account[]     @relation("AccountTree")
+  lines    JournalLine[]
+}
+
+model JournalEntry {
+  id        String        @id @default(uuid())
+  no        String        @unique
+  date      DateTime      @default(now())
+  memo      String?
+  status    JournalStatus @default(POSTED)
+  source    String?
+  sourceId  String?
+  createdBy String?
+  createdAt DateTime      @default(now())
+  lines     JournalLine[]
+
+  @@index([date])
+  @@index([source, sourceId])
+}
+
+model JournalLine {
+  id        String       @id @default(uuid())
+  entryId   String
+  accountId String
+  debit     Decimal      @default(0) @db.Decimal(18, 2)
+  credit    Decimal      @default(0) @db.Decimal(18, 2)
+  memo      String?
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  account   Account      @relation(fields: [accountId], references: [id])
 }
