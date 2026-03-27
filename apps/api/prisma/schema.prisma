@@ -20,6 +20,18 @@ enum JournalStatus {
   REVERSED
 }
 
+enum InvoiceKind {
+  AR
+  AP
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  VOID
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -104,34 +116,36 @@ model Warehouse {
 }
 
 model Customer {
-  id          String   @id @default(uuid())
-  code        String   @unique
+  id          String    @id @default(uuid())
+  code        String    @unique
   name        String
   contact     String?
   phone       String?
   email       String?
   address     String?
   taxId       String?
-  creditLimit Decimal  @default(0) @db.Decimal(18, 2)
-  termDays    Int      @default(30)
-  active      Boolean  @default(true)
-  createdAt   DateTime @default(now())
+  creditLimit Decimal   @default(0) @db.Decimal(18, 2)
+  termDays    Int       @default(30)
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  invoices    Invoice[]
 
   @@index([name])
 }
 
 model Supplier {
-  id        String   @id @default(uuid())
-  code      String   @unique
+  id        String    @id @default(uuid())
+  code      String    @unique
   name      String
   contact   String?
   phone     String?
   email     String?
   address   String?
   taxId     String?
-  termDays  Int      @default(30)
-  active    Boolean  @default(true)
-  createdAt DateTime @default(now())
+  termDays  Int       @default(30)
+  active    Boolean   @default(true)
+  createdAt DateTime  @default(now())
+  invoices  Invoice[]
 
   @@index([name])
 }
@@ -173,4 +187,37 @@ model JournalLine {
   memo      String?
   entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
   account   Account      @relation(fields: [accountId], references: [id])
+}
+
+model Invoice {
+  id         String        @id @default(uuid())
+  no         String        @unique
+  kind       InvoiceKind
+  customerId String?
+  supplierId String?
+  source     String?
+  sourceId   String?
+  issueDate  DateTime      @default(now())
+  dueDate    DateTime
+  amount     Decimal       @db.Decimal(18, 2)
+  paidAmount Decimal       @default(0) @db.Decimal(18, 2)
+  status     InvoiceStatus @default(UNPAID)
+  customer   Customer?     @relation(fields: [customerId], references: [id])
+  supplier   Supplier?     @relation(fields: [supplierId], references: [id])
+  payments   Payment[]
+
+  @@index([kind, status])
+  @@index([dueDate])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  no        String   @unique
+  invoiceId String
+  amount    Decimal  @db.Decimal(18, 2)
+  method    String   @default("TRANSFER")
+  paidAt    DateTime @default(now())
+  note      String?
+  createdBy String?
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
 }
