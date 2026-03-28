@@ -75,4 +75,32 @@ export class AccountingService {
       include: { lines: true },
     });
   }
+
+  async createInvoice(
+    tx: Tx,
+    data: {
+      kind: 'AR' | 'AP';
+      partyId: string;
+      amount: Num;
+      termDays: number;
+      source: string;
+      sourceId: string;
+    },
+  ) {
+    const issueDate = new Date();
+    const dueDate = new Date(issueDate.getTime() + data.termDays * 86_400_000);
+    return tx.invoice.create({
+      data: {
+        no: await this.seq.next(data.kind === 'AR' ? 'INV' : 'BIL', tx),
+        kind: data.kind,
+        customerId: data.kind === 'AR' ? data.partyId : undefined,
+        supplierId: data.kind === 'AP' ? data.partyId : undefined,
+        amount: round2(data.amount),
+        issueDate,
+        dueDate,
+        source: data.source,
+        sourceId: data.sourceId,
+      },
+    });
+  }
 }
