@@ -103,4 +103,8 @@ export class AccountingService {
       },
     });
   }
+
+  listAccounts() {
+    return this.prisma.account.findMany({ orderBy: { code: 'asc' } });
+  }
 }
