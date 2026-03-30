@@ -107,4 +107,8 @@ export class AccountingService {
   listAccounts() {
     return this.prisma.account.findMany({ orderBy: { code: 'asc' } });
   }
+
+  createAccount(data: { code: string; name: string; type: AccountType; parentId?: string }) {
+    return this.prisma.account.create({ data });
+  }
 }
