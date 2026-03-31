@@ -111,4 +111,8 @@ export class AccountingService {
   createAccount(data: { code: string; name: string; type: AccountType; parentId?: string }) {
     return this.prisma.account.create({ data });
   }
+
+  updateAccount(id: string, data: { name?: string; active?: boolean }) {
+    return this.prisma.account.update({ where: { id }, data });
+  }
 }
