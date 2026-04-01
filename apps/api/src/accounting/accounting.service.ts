@@ -115,4 +115,25 @@ export class AccountingService {
   updateAccount(id: string, data: { name?: string; active?: boolean }) {
     return this.prisma.account.update({ where: { id }, data });
   }
+
+  async listJournals(q: PageQueryDto) {
+    const where: Prisma.JournalEntryWhereInput = q.keyword
+      ? {
+          OR: [
+            { no: { contains: q.keyword, mode: 'insensitive' } },
+            { memo: { contains: q.keyword, mode: 'insensitive' } },
+          ],
+        }
+      : {};
+    const [items, total] = await Promise.all([
+      this.prisma.journalEntry.findMany({
+        where,
+        ...pageArgs(q),
+        orderBy: { createdAt: 'desc' },
+        include: { lines: { include: { account: { select: { code: true, name: true } } } } },
+      }),
+      this.prisma.journalEntry.count({ where }),
+    ]);
+    return toPage(items, total, q);
+  }
 }
