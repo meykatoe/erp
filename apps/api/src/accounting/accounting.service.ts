@@ -136,4 +136,8 @@ export class AccountingService {
     ]);
     return toPage(items, total, q);
   }
+
+  createManualJournal(input: PostInput) {
+    return this.prisma.$transaction((tx) => this.post(tx, { ...input, source: 'MANUAL' }));
+  }
 }
