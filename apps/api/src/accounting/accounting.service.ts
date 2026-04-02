@@ -140,4 +140,26 @@ export class AccountingService {
   createManualJournal(input: PostInput) {
     return this.prisma.$transaction((tx) => this.post(tx, { ...input, source: 'MANUAL' }));
   }
+
+  async reverseJournal(id: string, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const entry = await tx.journalEntry.findUniqueOrThrow({
+        where: { id },
+        include: { lines: { include: { account: true } } },
+      });
+      if (entry.status === 'REVERSED') throw new BadRequestException('此分錄已沖銷');
+      await tx.journalEntry.update({ where: { id }, data: { status: 'REVERSED' } });
+      return this.post(tx, {
+        memo: `沖銷 ${entry.no}`,
+        source: 'REVERSAL',
+        sourceId: entry.id,
+        createdBy: userId,
+        lines: entry.lines.map((l) => ({
+          code: l.account.code,
+          debit: l.credit,
+          credit: l.debit,
+        })),
+      });
+    });
+  }
 }
