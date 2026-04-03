@@ -162,4 +162,27 @@ export class AccountingService {
       });
     });
   }
+
+  async trialBalance(asOf?: Date) {
+    const lines = await this.prisma.journalLine.groupBy({
+      by: ['accountId'],
+      where: { entry: { status: 'POSTED', ...(asOf && { date: { lte: asOf } }) } },
+      _sum: { debit: true, credit: true },
+    });
+    const accounts = await this.prisma.account.findMany({ orderBy: { code: 'asc' } });
+    const map = new Map(lines.map((l) => [l.accountId, l._sum]));
+    const rows = accounts.map((a) => {
+      const s = map.get(a.id);
+      return {
+        code: a.code,
+        name: a.name,
+        type: a.type,
+        debit: s?.debit ?? ZERO,
+        credit: s?.credit ?? ZERO,
+      };
+    });
+    const totalDebit = sum(rows.map((r) => r.debit));
+    const totalCredit = sum(rows.map((r) => r.credit));
+    return { rows, totalDebit, totalCredit, balanced: totalDebit.eq(totalCredit) };
+  }
 }
