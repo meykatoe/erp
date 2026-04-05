@@ -28,4 +28,17 @@ describe('assertBalanced', () => {
       ]),
     ).toThrow(BadRequestException);
   });
+
+  it('金額為零時拒絕', () => {
+    expect(() =>
+      assertBalanced([
+        { code: '1000', debit: 0 },
+        { code: '4100', credit: 0 },
+      ]),
+    ).toThrow(BadRequestException);
+  });
+
+  it('明細少於兩筆時拒絕', () => {
+    expect(() => assertBalanced([{ code: '1000', debit: 1 }])).toThrow();
+  });
 });
