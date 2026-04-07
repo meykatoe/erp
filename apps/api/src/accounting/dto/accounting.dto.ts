@@ -65,3 +65,23 @@ export class CreateJournalDto {
   @Type(() => JournalLineDto)
   lines!: JournalLineDto[];
 }
+
+export class PayDto {
+  @IsNumber()
+  @Min(0.01)
+  amount!: number;
+
+  @IsOptional()
+  @IsString()
+  method?: string;
+}
+
+export class InvoiceQueryDto extends PageQueryDto {
+  @IsOptional()
+  @IsString()
+  kind?: 'AR' | 'AP';
+
+  @IsOptional()
+  @IsString()
+  status?: string;
+}
