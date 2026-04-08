@@ -49,4 +49,10 @@ export class AccountingController {
   reverse(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.service.reverseJournal(id, user.id);
   }
+
+  @Get('trial-balance')
+  @Perm(PERMISSIONS.ACCOUNTING_READ)
+  trialBalance(@Query('asOf') asOf?: string) {
+    return this.service.trialBalance(asOf ? new Date(asOf) : undefined);
+  }
 }
