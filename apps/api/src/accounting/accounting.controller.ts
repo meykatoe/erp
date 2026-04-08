@@ -27,4 +27,26 @@ export class AccountingController {
   updateAccount(@Param('id') id: string, @Body() dto: { name?: string; active?: boolean }) {
     return this.service.updateAccount(id, dto);
   }
+
+  @Get('journals')
+  @Perm(PERMISSIONS.ACCOUNTING_READ)
+  journals(@Query() q: PageQueryDto) {
+    return this.service.listJournals(q);
+  }
+
+  @Post('journals')
+  @Perm(PERMISSIONS.ACCOUNTING_WRITE)
+  createJournal(@Body() dto: CreateJournalDto, @CurrentUser() user: AuthUser) {
+    return this.service.createManualJournal({
+      ...dto,
+      date: dto.date ? new Date(dto.date) : undefined,
+      createdBy: user.id,
+    });
+  }
+
+  @Post('journals/:id/reverse')
+  @Perm(PERMISSIONS.ACCOUNTING_WRITE)
+  reverse(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.service.reverseJournal(id, user.id);
+  }
 }
