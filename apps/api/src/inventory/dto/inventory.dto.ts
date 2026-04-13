@@ -16,3 +16,19 @@ export class StockQueryDto extends PageQueryDto {
   @IsBoolean()
   lowStock?: boolean;
 }
+
+export class AdjustDto {
+  @IsString()
+  productId!: string;
+
+  @IsString()
+  warehouseId!: string;
+
+  @IsNumber()
+  @Min(0)
+  countedQty!: number;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
+}
