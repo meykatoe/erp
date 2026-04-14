@@ -32,3 +32,22 @@ export class AdjustDto {
   @IsString()
   note?: string;
 }
+
+export class TransferDto {
+  @IsString()
+  productId!: string;
+
+  @IsString()
+  fromWarehouseId!: string;
+
+  @IsString()
+  toWarehouseId!: string;
+
+  @IsNumber()
+  @Min(0.001)
+  quantity!: number;
+
+  @IsOptional()
+  @IsString()
+  note?: string;
+}
