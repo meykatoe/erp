@@ -53,4 +53,33 @@ export class InventoryService {
       data: { ...m, quantity: qty },
     });
   }
+
+  async levels(q: PageQueryDto & { warehouseId?: string; lowStock?: boolean }) {
+    const where: Prisma.StockLevelWhereInput = {
+      warehouseId: q.warehouseId,
+      ...(q.keyword && {
+        product: {
+          OR: [
+            { name: { contains: q.keyword, mode: 'insensitive' } },
+            { sku: { contains: q.keyword, mode: 'insensitive' } },
+          ],
+        },
+      }),
+    };
+    const [rows, total] = await Promise.all([
+      this.prisma.stockLevel.findMany({
+        where,
+        ...pageArgs(q),
+        orderBy: { product: { sku: 'asc' } },
+        include: { product: true, warehouse: { select: { code: true, name: true } } },
+      }),
+      this.prisma.stockLevel.count({ where }),
+    ]);
+    const items = rows.map((r) => ({
+      ...r,
+      low: r.quantity.lte(r.product.reorderPoint),
+      value: round2(r.quantity.mul(r.product.cost)),
+    }));
+    return toPage(q.lowStock ? items.filter((i) => i.low) : items, total, q);
+  }
 }
