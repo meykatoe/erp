@@ -82,4 +82,24 @@ export class InventoryService {
     }));
     return toPage(q.lowStock ? items.filter((i) => i.low) : items, total, q);
   }
+
+  async movements(q: PageQueryDto & { productId?: string; warehouseId?: string }) {
+    const where: Prisma.StockMovementWhereInput = {
+      productId: q.productId,
+      warehouseId: q.warehouseId,
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.stockMovement.findMany({
+        where,
+        ...pageArgs(q),
+        orderBy: { createdAt: 'desc' },
+        include: {
+          product: { select: { sku: true, name: true } },
+          warehouse: { select: { code: true, name: true } },
+        },
+      }),
+      this.prisma.stockMovement.count({ where }),
+    ]);
+    return toPage(items, total, q);
+  }
 }
