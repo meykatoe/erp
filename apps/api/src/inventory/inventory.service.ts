@@ -102,4 +102,48 @@ export class InventoryService {
     ]);
     return toPage(items, total, q);
   }
+
+  adjust(
+    dto: { productId: string; warehouseId: string; countedQty: number; note?: string },
+    userId?: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const level = await tx.stockLevel.findUnique({
+        where: {
+          productId_warehouseId: { productId: dto.productId, warehouseId: dto.warehouseId },
+        },
+      });
+      const product = await tx.product.findUniqueOrThrow({ where: { id: dto.productId } });
+      const diff = D(dto.countedQty).sub(level?.quantity ?? 0);
+      if (diff.isZero()) return { diff: 0 };
+
+      await this.applyMovement(tx, {
+        productId: dto.productId,
+        warehouseId: dto.warehouseId,
+        type: diff.gt(0) ? 'ADJUST_IN' : 'ADJUST_OUT',
+        quantity: diff.abs(),
+        refType: 'ADJUST',
+        note: dto.note,
+        createdBy: userId,
+      });
+      const value = round2(diff.abs().mul(product.cost));
+      if (value.gt(0)) {
+        await this.accounting.post(tx, {
+          memo: `盤點調整 ${product.sku}`,
+          source: 'ADJUST',
+          createdBy: userId,
+          lines: diff.gt(0)
+            ? [
+                { code: ACCOUNT.INVENTORY, debit: value },
+                { code: ACCOUNT.INVENTORY_DIFF, credit: value },
+              ]
+            : [
+                { code: ACCOUNT.INVENTORY_DIFF, debit: value },
+                { code: ACCOUNT.INVENTORY, credit: value },
+              ],
+        });
+      }
+      return { diff: diff.toNumber() };
+    });
+  }
 }
