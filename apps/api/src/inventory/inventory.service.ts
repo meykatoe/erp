@@ -146,4 +146,39 @@ export class InventoryService {
       return { diff: diff.toNumber() };
     });
   }
+
+  transfer(
+    dto: {
+      productId: string;
+      fromWarehouseId: string;
+      toWarehouseId: string;
+      quantity: number;
+      note?: string;
+    },
+    userId?: string,
+  ) {
+    if (dto.fromWarehouseId === dto.toWarehouseId) {
+      throw new BadRequestException('來源與目的倉庫不可相同');
+    }
+    return this.prisma.$transaction(async (tx) => {
+      const base = {
+        productId: dto.productId,
+        quantity: dto.quantity,
+        refType: 'TRANSFER',
+        note: dto.note,
+        createdBy: userId,
+      };
+      await this.applyMovement(tx, {
+        ...base,
+        warehouseId: dto.fromWarehouseId,
+        type: 'TRANSFER_OUT',
+      });
+      await this.applyMovement(tx, {
+        ...base,
+        warehouseId: dto.toWarehouseId,
+        type: 'TRANSFER_IN',
+      });
+      return { ok: true };
+    });
+  }
 }
