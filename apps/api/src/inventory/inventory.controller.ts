@@ -20,4 +20,16 @@ export class InventoryController {
   movements(@Query() q: StockQueryDto) {
     return this.service.movements(q);
   }
+
+  @Post('adjust')
+  @Perm(PERMISSIONS.INVENTORY_ADJUST)
+  adjust(@Body() dto: AdjustDto, @CurrentUser() user: AuthUser) {
+    return this.service.adjust(dto, user.id);
+  }
+
+  @Post('transfer')
+  @Perm(PERMISSIONS.INVENTORY_ADJUST)
+  transfer(@Body() dto: TransferDto, @CurrentUser() user: AuthUser) {
+    return this.service.transfer(dto, user.id);
+  }
 }
