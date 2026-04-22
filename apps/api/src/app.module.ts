@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { AccountingModule } from './accounting/accounting.module';
+import { InventoryModule } from './inventory/inventory.module';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
@@ -35,6 +36,7 @@ import { UsersModule } from './users/users.module';
     CustomersModule,
     SuppliersModule,
     AccountingModule,
+    InventoryModule,
     HealthModule,
   ],
   providers: [
