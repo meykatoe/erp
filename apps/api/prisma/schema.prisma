@@ -7,6 +7,15 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum MovementType {
+  PURCHASE_IN
+  SALES_OUT
+  ADJUST_IN
+  ADJUST_OUT
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
 enum AccountType {
   ASSET
   LIABILITY
@@ -91,28 +100,32 @@ model Category {
 }
 
 model Product {
-  id           String    @id @default(uuid())
-  sku          String    @unique
+  id           String          @id @default(uuid())
+  sku          String          @unique
   name         String
   categoryId   String?
-  category     Category? @relation(fields: [categoryId], references: [id])
-  unit         String    @default("PCS")
-  price        Decimal   @default(0) @db.Decimal(18, 2)
-  cost         Decimal   @default(0) @db.Decimal(18, 4)
-  reorderPoint Decimal   @default(0) @db.Decimal(18, 3)
-  active       Boolean   @default(true)
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  category     Category?       @relation(fields: [categoryId], references: [id])
+  unit         String          @default("PCS")
+  price        Decimal         @default(0) @db.Decimal(18, 2)
+  cost         Decimal         @default(0) @db.Decimal(18, 4)
+  reorderPoint Decimal         @default(0) @db.Decimal(18, 3)
+  active       Boolean         @default(true)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  stocks       StockLevel[]
+  movements    StockMovement[]
 
   @@index([name])
 }
 
 model Warehouse {
-  id      String  @id @default(uuid())
-  code    String  @unique
-  name    String
-  address String?
-  active  Boolean @default(true)
+  id        String          @id @default(uuid())
+  code      String          @unique
+  name      String
+  address   String?
+  active    Boolean         @default(true)
+  stocks    StockLevel[]
+  movements StockMovement[]
 }
 
 model Customer {
@@ -148,6 +161,35 @@ model Supplier {
   invoices  Invoice[]
 
   @@index([name])
+}
+
+model StockLevel {
+  id          String    @id @default(uuid())
+  productId   String
+  warehouseId String
+  quantity    Decimal   @default(0) @db.Decimal(18, 3)
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId])
+}
+
+model StockMovement {
+  id          String       @id @default(uuid())
+  productId   String
+  warehouseId String
+  type        MovementType
+  quantity    Decimal      @db.Decimal(18, 3)
+  refType     String?
+  refId       String?
+  note        String?
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  product     Product      @relation(fields: [productId], references: [id])
+  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([refType, refId])
 }
 
 model Account {
