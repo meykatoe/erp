@@ -32,3 +32,29 @@ export class FulfillItemDto {
   @Min(0.001)
   quantity!: number;
 }
+
+export class FulfillDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @ValidateNested({ each: true })
+  @Type(() => FulfillItemDto)
+  items!: FulfillItemDto[];
+}
+
+export class OrderQueryDto extends PageQueryDto {
+  @IsOptional()
+  @IsString()
+  status?: string;
+
+  @IsOptional()
+  @IsString()
+  partyId?: string;
+
+  @IsOptional()
+  @IsDateString()
+  from?: string;
+
+  @IsOptional()
+  @IsDateString()
+  to?: string;
+}
