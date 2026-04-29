@@ -52,4 +52,33 @@ export class PurchaseService {
   get(id: string) {
     return this.prisma.purchaseOrder.findUniqueOrThrow({ where: { id }, include });
   }
+
+  private buildItems(dto: CreatePurchaseDto) {
+    const items = dto.items.map((i) => ({
+      productId: i.productId,
+      quantity: D(i.quantity),
+      unitPrice: D(i.unitPrice),
+      amount: lineAmount(i.quantity, i.unitPrice),
+    }));
+    return { items, total: sum(items.map((i) => i.amount)) };
+  }
+
+  create(dto: CreatePurchaseDto, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const { items, total } = this.buildItems(dto);
+      return tx.purchaseOrder.create({
+        data: {
+          no: await this.seq.next('PO', tx),
+          supplierId: dto.supplierId,
+          warehouseId: dto.warehouseId,
+          expectedDate: dto.expectedDate ? new Date(dto.expectedDate) : undefined,
+          note: dto.note,
+          total,
+          createdBy: userId,
+          items: { create: items },
+        },
+        include,
+      });
+    });
+  }
 }
