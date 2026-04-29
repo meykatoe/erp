@@ -81,4 +81,25 @@ export class PurchaseService {
       });
     });
   }
+
+  async update(id: string, dto: CreatePurchaseDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.purchaseOrder.findUniqueOrThrow({ where: { id } });
+      if (order.status !== 'DRAFT') throw new BadRequestException('只有草稿可以修改');
+      const { items, total } = this.buildItems(dto);
+      await tx.purchaseOrderItem.deleteMany({ where: { orderId: id } });
+      return tx.purchaseOrder.update({
+        where: { id },
+        data: {
+          supplierId: dto.supplierId,
+          warehouseId: dto.warehouseId,
+          expectedDate: dto.expectedDate ? new Date(dto.expectedDate) : null,
+          note: dto.note,
+          total,
+          items: { create: items },
+        },
+        include,
+      });
+    });
+  }
 }
