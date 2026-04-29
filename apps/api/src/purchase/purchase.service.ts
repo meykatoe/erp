@@ -102,4 +102,14 @@ export class PurchaseService {
       });
     });
   }
+
+  async approve(id: string) {
+    const order = await this.prisma.purchaseOrder.findUniqueOrThrow({ where: { id } });
+    assertTransition(PURCHASE_TRANSITIONS, order.status, 'APPROVED', '採購單');
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { status: 'APPROVED' },
+      include,
+    });
+  }
 }
