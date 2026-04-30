@@ -122,4 +122,76 @@ export class PurchaseService {
       include,
     });
   }
+
+  receive(id: string, dto: FulfillDto, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "PurchaseOrder" WHERE id = ${id} FOR UPDATE`;
+      const order = await tx.purchaseOrder.findUniqueOrThrow({
+        where: { id },
+        include: { items: true, supplier: true },
+      });
+      if (order.status !== 'APPROVED' && order.status !== 'PARTIALLY_RECEIVED') {
+        throw new BadRequestException('採購單尚未核准或已結案');
+      }
+
+      let received = D(0);
+      for (const line of dto.items) {
+        const item = order.items.find((i) => i.id === line.itemId);
+        if (!item) throw new BadRequestException('收貨明細不屬於此採購單');
+        const qty = D(line.quantity);
+        if (qty.gt(item.quantity.sub(item.receivedQty))) {
+          throw new BadRequestException('收貨數量超過未收數量');
+        }
+
+        const agg = await tx.stockLevel.aggregate({
+          where: { productId: item.productId },
+          _sum: { quantity: true },
+        });
+        const product = await tx.product.findUniqueOrThrow({ where: { id: item.productId } });
+        const cost = movingAverage(agg._sum.quantity ?? 0, product.cost, qty, item.unitPrice);
+        await tx.product.update({ where: { id: item.productId }, data: { cost } });
+
+        await this.inventory.applyMovement(tx, {
+          productId: item.productId,
+          warehouseId: order.warehouseId,
+          type: 'PURCHASE_IN',
+          quantity: qty,
+          refType: 'PO',
+          refId: order.id,
+          createdBy: userId,
+        });
+        await tx.purchaseOrderItem.update({
+          where: { id: item.id },
+          data: { receivedQty: { increment: qty } },
+        });
+        received = received.add(lineAmount(qty, item.unitPrice));
+      }
+
+      const fresh = await tx.purchaseOrderItem.findMany({ where: { orderId: id } });
+      const done = fresh.every((i) => i.receivedQty.gte(i.quantity));
+      const status = done ? 'RECEIVED' : 'PARTIALLY_RECEIVED';
+      assertTransition(PURCHASE_TRANSITIONS, order.status, status, '採購單');
+      await tx.purchaseOrder.update({ where: { id }, data: { status } });
+
+      await this.accounting.post(tx, {
+        memo: `採購入庫 ${order.no}`,
+        source: 'PO',
+        sourceId: order.id,
+        createdBy: userId,
+        lines: [
+          { code: ACCOUNT.INVENTORY, debit: received },
+          { code: ACCOUNT.AP, credit: received },
+        ],
+      });
+      await this.accounting.createInvoice(tx, {
+        kind: 'AP',
+        partyId: order.supplierId,
+        amount: received,
+        termDays: order.supplier.termDays,
+        source: 'PO',
+        sourceId: order.id,
+      });
+      return tx.purchaseOrder.findUniqueOrThrow({ where: { id }, include });
+    });
+  }
 }
