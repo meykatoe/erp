@@ -112,4 +112,14 @@ export class PurchaseService {
       include,
     });
   }
+
+  async cancel(id: string) {
+    const order = await this.prisma.purchaseOrder.findUniqueOrThrow({ where: { id } });
+    assertTransition(PURCHASE_TRANSITIONS, order.status, 'CANCELLED', '採購單');
+    return this.prisma.purchaseOrder.update({
+      where: { id },
+      data: { status: 'CANCELLED' },
+      include,
+    });
+  }
 }
