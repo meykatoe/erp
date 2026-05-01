@@ -1,0 +1,30 @@
+import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { PERMISSIONS } from '../common/constants/permissions';
+import { AuthUser, CurrentUser } from '../common/decorators/current-user.decorator';
+import { Perm } from '../common/decorators/permissions.decorator';
+import { FulfillDto, OrderQueryDto } from '../common/dto/order.dto';
+import { CreatePurchaseDto, UpdatePurchaseDto } from './dto/purchase.dto';
+import { PurchaseService } from './purchase.service';
+
+@Controller('purchase-orders')
+export class PurchaseController {
+  constructor(private readonly service: PurchaseService) {}
+
+  @Get()
+  @Perm(PERMISSIONS.PURCHASE_READ)
+  list(@Query() q: OrderQueryDto) {
+    return this.service.list(q);
+  }
+
+  @Get(':id')
+  @Perm(PERMISSIONS.PURCHASE_READ)
+  get(@Param('id') id: string) {
+    return this.service.get(id);
+  }
+
+  @Post()
+  @Perm(PERMISSIONS.PURCHASE_WRITE)
+  create(@Body() dto: CreatePurchaseDto, @CurrentUser() user: AuthUser) {
+    return this.service.create(dto, user.id);
+  }
+}
