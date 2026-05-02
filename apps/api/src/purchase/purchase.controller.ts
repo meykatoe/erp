@@ -27,4 +27,16 @@ export class PurchaseController {
   create(@Body() dto: CreatePurchaseDto, @CurrentUser() user: AuthUser) {
     return this.service.create(dto, user.id);
   }
+
+  @Put(':id')
+  @Perm(PERMISSIONS.PURCHASE_WRITE)
+  update(@Param('id') id: string, @Body() dto: UpdatePurchaseDto) {
+    return this.service.update(id, dto);
+  }
+
+  @Post(':id/approve')
+  @Perm(PERMISSIONS.PURCHASE_APPROVE)
+  approve(@Param('id') id: string) {
+    return this.service.approve(id);
+  }
 }
