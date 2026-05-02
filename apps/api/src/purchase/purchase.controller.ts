@@ -39,4 +39,10 @@ export class PurchaseController {
   approve(@Param('id') id: string) {
     return this.service.approve(id);
   }
+
+  @Post(':id/cancel')
+  @Perm(PERMISSIONS.PURCHASE_WRITE)
+  cancel(@Param('id') id: string) {
+    return this.service.cancel(id);
+  }
 }
