@@ -45,4 +45,10 @@ export class PurchaseController {
   cancel(@Param('id') id: string) {
     return this.service.cancel(id);
   }
+
+  @Post(':id/receive')
+  @Perm(PERMISSIONS.PURCHASE_RECEIVE)
+  receive(@Param('id') id: string, @Body() dto: FulfillDto, @CurrentUser() user: AuthUser) {
+    return this.service.receive(id, dto, user.id);
+  }
 }
