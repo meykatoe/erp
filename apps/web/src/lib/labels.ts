@@ -22,3 +22,12 @@ export const STATUS_LABEL: Record<string, string> = {
   POSTED: '已過帳',
   REVERSED: '已沖銷',
 };
+
+export const MOVEMENT_LABEL: Record<string, string> = {
+  PURCHASE_IN: '採購入庫',
+  SALES_OUT: '銷貨出庫',
+  ADJUST_IN: '盤盈',
+  ADJUST_OUT: '盤虧',
+  TRANSFER_IN: '調入',
+  TRANSFER_OUT: '調出',
+};
