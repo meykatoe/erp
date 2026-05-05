@@ -134,3 +134,29 @@ export function InventoryPage() {
     </section>
   );
 }
+
+export function MovementsPage() {
+  const { data, loading, page, setPage } = usePaged<Row>('/inventory/movements');
+  return (
+    <section>
+      <div className="page-head">
+        <h2>庫存異動紀錄</h2>
+      </div>
+      <DataTable
+        loading={loading}
+        rows={data?.items ?? []}
+        columns={[
+          { key: 'createdAt', label: '時間', render: (r) => datetime(r.createdAt) },
+          { key: 'type', label: '類型', render: (r) => MOVEMENT_LABEL[r.type] ?? r.type },
+          { key: 'sku', label: '料號', render: (r) => r.product.sku },
+          { key: 'name', label: '品名', render: (r) => r.product.name },
+          { key: 'wh', label: '倉庫', render: (r) => r.warehouse.name },
+          { key: 'quantity', label: '數量', align: 'right', render: (r) => qty(r.quantity) },
+          { key: 'refType', label: '來源' },
+          { key: 'note', label: '備註' },
+        ]}
+      />
+      {data && <Pagination page={page} totalPages={data.totalPages} total={data.total} onChange={setPage} />}
+    </section>
+  );
+}
