@@ -233,3 +233,140 @@ export function OrderFormPage({ cfg }: { cfg: OrderConfig }) {
     </section>
   );
 }
+
+export function OrderDetailPage({ cfg }: { cfg: OrderConfig }) {
+  const { id } = useParams();
+  const nav = useNavigate();
+  const { can } = useAuth();
+  const toast = useToast();
+  const [order, setOrder] = useState<Row | null>(null);
+  const [fulfilling, setFulfilling] = useState(false);
+  const [qtys, setQtys] = useState<Record<string, string>>({});
+
+  const load = () => api<Row>(`${cfg.base}/${id}`).then(setOrder);
+  useEffect(() => {
+    load().catch((e) => toast('error', e.message));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
+
+  if (!order) return <p className="muted">載入中…</p>;
+
+  const act = async (action: string, body?: unknown) => {
+    try {
+      await api(`${cfg.base}/${id}/${action}`, { body: body ?? {} });
+      toast('ok', '操作成功');
+      await load();
+      setFulfilling(false);
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const openFulfill = () => {
+    const init: Record<string, string> = {};
+    for (const i of order.items) init[i.id] = String(Number(i.quantity) - Number(i[cfg.doneKey]));
+    setQtys(init);
+    setFulfilling(true);
+  };
+
+  const submitFulfill = (e: FormEvent) => {
+    e.preventDefault();
+    const items = Object.entries(qtys)
+      .filter(([, v]) => Number(v) > 0)
+      .map(([itemId, v]) => ({ itemId, quantity: Number(v) }));
+    if (items.length === 0) return toast('error', '請輸入數量');
+    act(cfg.fulfillAction, { items });
+  };
+
+  const st = order.status as string;
+  const canFulfill = ['APPROVED', 'CONFIRMED', 'PARTIALLY_RECEIVED', 'PARTIALLY_SHIPPED'].includes(st);
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>
+          {cfg.title} {order.no} <StatusBadge status={st} />
+        </h2>
+        <div className="actions">
+          <button onClick={() => nav(cfg.route)}>返回列表</button>
+          {st === 'DRAFT' && can(cfg.writePerm) && <button onClick={() => nav(`${cfg.route}/${id}/edit`)}>編輯</button>}
+          {st === 'DRAFT' && can(cfg.approvePerm) && (
+            <button className="primary" onClick={() => act(cfg.approveAction)}>
+              {cfg.approveLabel}
+            </button>
+          )}
+          {canFulfill && can(cfg.fulfillPerm) && (
+            <button className="primary" onClick={openFulfill}>
+              {cfg.fulfillLabel}
+            </button>
+          )}
+          {['DRAFT', 'APPROVED', 'CONFIRMED'].includes(st) && can(cfg.writePerm) && (
+            <button
+              className="danger"
+              onClick={() => confirm('確定取消此單據?') && act('cancel')}
+            >
+              取消
+            </button>
+          )}
+        </div>
+      </div>
+      <dl className="detail-head card">
+        <div>
+          <dt>{cfg.partyLabel}</dt>
+          <dd>{order[cfg.partyKey]?.name}</dd>
+        </div>
+        <div>
+          <dt>倉庫</dt>
+          <dd>{order.warehouse?.name}</dd>
+        </div>
+        <div>
+          <dt>單據日期</dt>
+          <dd>{date(order.orderDate)}</dd>
+        </div>
+        <div>
+          <dt>預計日期</dt>
+          <dd>{date(order.expectedDate) || '-'}</dd>
+        </div>
+        <div>
+          <dt>備註</dt>
+          <dd>{order.note || '-'}</dd>
+        </div>
+      </dl>
+      <DataTable
+        rows={order.items}
+        columns={[
+          { key: 'sku', label: '料號', render: (r) => r.product.sku },
+          { key: 'name', label: '品名', render: (r) => r.product.name },
+          { key: 'quantity', label: '數量', align: 'right', render: (r) => qty(r.quantity) },
+          { key: 'done', label: cfg.doneLabel, align: 'right', render: (r) => qty(r[cfg.doneKey]) },
+          { key: 'unitPrice', label: '單價', align: 'right', render: (r) => money(r.unitPrice) },
+          { key: 'amount', label: '金額', align: 'right', render: (r) => money(r.amount) },
+        ]}
+      />
+      <div className="total">合計 {money(order.total)}</div>
+      {fulfilling && (
+        <Modal title={`${cfg.fulfillLabel} ${order.no}`} onClose={() => setFulfilling(false)}>
+          <form className="form" onSubmit={submitFulfill}>
+            {order.items.map((i: Row) => (
+              <label key={i.id}>
+                <span>
+                  {i.product.sku} {i.product.name}(未完成 {qty(Number(i.quantity) - Number(i[cfg.doneKey]))})
+                </span>
+                <input
+                  type="number"
+                  min="0"
+                  step="any"
+                  value={qtys[i.id] ?? ''}
+                  onChange={(e) => setQtys({ ...qtys, [i.id]: e.target.value })}
+                />
+              </label>
+            ))}
+            <footer>
+              <button className="primary">確認{cfg.fulfillLabel}</button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+    </section>
+  );
+}
