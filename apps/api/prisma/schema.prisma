@@ -7,6 +7,48 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum PurchaseStatus {
+  DRAFT
+  APPROVED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CANCELLED
+}
+
+enum MovementType {
+  PURCHASE_IN
+  SALES_OUT
+  ADJUST_IN
+  ADJUST_OUT
+  TRANSFER_IN
+  TRANSFER_OUT
+}
+
+enum AccountType {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum JournalStatus {
+  POSTED
+  REVERSED
+}
+
+enum InvoiceKind {
+  AR
+  AP
+}
+
+enum InvoiceStatus {
+  UNPAID
+  PARTIAL
+  PAID
+  VOID
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -54,4 +96,214 @@ model AuditLog {
 model NumberSequence {
   key     String @id
   current Int    @default(0)
+}
+
+model Category {
+  id       String     @id @default(uuid())
+  name     String     @unique
+  parentId String?
+  parent   Category?  @relation("CategoryTree", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryTree")
+  products Product[]
+}
+
+model Product {
+  id            String              @id @default(uuid())
+  sku           String              @unique
+  name          String
+  categoryId    String?
+  category      Category?           @relation(fields: [categoryId], references: [id])
+  unit          String              @default("PCS")
+  price         Decimal             @default(0) @db.Decimal(18, 2)
+  cost          Decimal             @default(0) @db.Decimal(18, 4)
+  reorderPoint  Decimal             @default(0) @db.Decimal(18, 3)
+  active        Boolean             @default(true)
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  stocks        StockLevel[]
+  movements     StockMovement[]
+  purchaseItems PurchaseOrderItem[]
+
+  @@index([name])
+}
+
+model Warehouse {
+  id        String          @id @default(uuid())
+  code      String          @unique
+  name      String
+  address   String?
+  active    Boolean         @default(true)
+  stocks    StockLevel[]
+  movements StockMovement[]
+  purchases PurchaseOrder[]
+}
+
+model Customer {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  name        String
+  contact     String?
+  phone       String?
+  email       String?
+  address     String?
+  taxId       String?
+  creditLimit Decimal   @default(0) @db.Decimal(18, 2)
+  termDays    Int       @default(30)
+  active      Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  invoices    Invoice[]
+
+  @@index([name])
+}
+
+model Supplier {
+  id        String          @id @default(uuid())
+  code      String          @unique
+  name      String
+  contact   String?
+  phone     String?
+  email     String?
+  address   String?
+  taxId     String?
+  termDays  Int             @default(30)
+  active    Boolean         @default(true)
+  createdAt DateTime        @default(now())
+  orders    PurchaseOrder[]
+  invoices  Invoice[]
+
+  @@index([name])
+}
+
+model StockLevel {
+  id          String    @id @default(uuid())
+  productId   String
+  warehouseId String
+  quantity    Decimal   @default(0) @db.Decimal(18, 3)
+  product     Product   @relation(fields: [productId], references: [id])
+  warehouse   Warehouse @relation(fields: [warehouseId], references: [id])
+
+  @@unique([productId, warehouseId])
+}
+
+model StockMovement {
+  id          String       @id @default(uuid())
+  productId   String
+  warehouseId String
+  type        MovementType
+  quantity    Decimal      @db.Decimal(18, 3)
+  refType     String?
+  refId       String?
+  note        String?
+  createdBy   String?
+  createdAt   DateTime     @default(now())
+  product     Product      @relation(fields: [productId], references: [id])
+  warehouse   Warehouse    @relation(fields: [warehouseId], references: [id])
+
+  @@index([productId, createdAt])
+  @@index([refType, refId])
+}
+
+model PurchaseOrder {
+  id           String              @id @default(uuid())
+  no           String              @unique
+  supplierId   String
+  warehouseId  String
+  status       PurchaseStatus      @default(DRAFT)
+  orderDate    DateTime            @default(now())
+  expectedDate DateTime?
+  total        Decimal             @default(0) @db.Decimal(18, 2)
+  note         String?
+  createdBy    String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+  supplier     Supplier            @relation(fields: [supplierId], references: [id])
+  warehouse    Warehouse           @relation(fields: [warehouseId], references: [id])
+  items        PurchaseOrderItem[]
+
+  @@index([status])
+  @@index([orderDate])
+}
+
+model PurchaseOrderItem {
+  id          String        @id @default(uuid())
+  orderId     String
+  productId   String
+  quantity    Decimal       @db.Decimal(18, 3)
+  receivedQty Decimal       @default(0) @db.Decimal(18, 3)
+  unitPrice   Decimal       @db.Decimal(18, 4)
+  amount      Decimal       @db.Decimal(18, 2)
+  order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product     Product       @relation(fields: [productId], references: [id])
+}
+
+model Account {
+  id       String        @id @default(uuid())
+  code     String        @unique
+  name     String
+  type     AccountType
+  parentId String?
+  active   Boolean       @default(true)
+  parent   Account?      @relation("AccountTree", fields: [parentId], references: [id])
+  children Account[]     @relation("AccountTree")
+  lines    JournalLine[]
+}
+
+model JournalEntry {
+  id        String        @id @default(uuid())
+  no        String        @unique
+  date      DateTime      @default(now())
+  memo      String?
+  status    JournalStatus @default(POSTED)
+  source    String?
+  sourceId  String?
+  createdBy String?
+  createdAt DateTime      @default(now())
+  lines     JournalLine[]
+
+  @@index([date])
+  @@index([source, sourceId])
+}
+
+model JournalLine {
+  id        String       @id @default(uuid())
+  entryId   String
+  accountId String
+  debit     Decimal      @default(0) @db.Decimal(18, 2)
+  credit    Decimal      @default(0) @db.Decimal(18, 2)
+  memo      String?
+  entry     JournalEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  account   Account      @relation(fields: [accountId], references: [id])
+}
+
+model Invoice {
+  id         String        @id @default(uuid())
+  no         String        @unique
+  kind       InvoiceKind
+  customerId String?
+  supplierId String?
+  source     String?
+  sourceId   String?
+  issueDate  DateTime      @default(now())
+  dueDate    DateTime
+  amount     Decimal       @db.Decimal(18, 2)
+  paidAmount Decimal       @default(0) @db.Decimal(18, 2)
+  status     InvoiceStatus @default(UNPAID)
+  customer   Customer?     @relation(fields: [customerId], references: [id])
+  supplier   Supplier?     @relation(fields: [supplierId], references: [id])
+  payments   Payment[]
+
+  @@index([kind, status])
+  @@index([dueDate])
+}
+
+model Payment {
+  id        String   @id @default(uuid())
+  no        String   @unique
+  invoiceId String
+  amount    Decimal  @db.Decimal(18, 2)
+  method    String   @default("TRANSFER")
+  paidAt    DateTime @default(now())
+  note      String?
+  createdBy String?
+  invoice   Invoice  @relation(fields: [invoiceId], references: [id])
 }
