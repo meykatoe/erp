@@ -48,4 +48,8 @@ export class SalesService {
     ]);
     return toPage(items, total, q);
   }
+
+  get(id: string) {
+    return this.prisma.salesOrder.findUniqueOrThrow({ where: { id }, include });
+  }
 }
