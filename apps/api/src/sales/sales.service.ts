@@ -52,4 +52,14 @@ export class SalesService {
   get(id: string) {
     return this.prisma.salesOrder.findUniqueOrThrow({ where: { id }, include });
   }
+
+  private buildItems(dto: CreateSalesDto) {
+    const items = dto.items.map((i) => ({
+      productId: i.productId,
+      quantity: D(i.quantity),
+      unitPrice: D(i.unitPrice),
+      amount: lineAmount(i.quantity, i.unitPrice),
+    }));
+    return { items, total: sum(items.map((i) => i.amount)) };
+  }
 }
