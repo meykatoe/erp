@@ -62,4 +62,23 @@ export class SalesService {
     }));
     return { items, total: sum(items.map((i) => i.amount)) };
   }
+
+  create(dto: CreateSalesDto, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const { items, total } = this.buildItems(dto);
+      return tx.salesOrder.create({
+        data: {
+          no: await this.seq.next('SO', tx),
+          customerId: dto.customerId,
+          warehouseId: dto.warehouseId,
+          expectedDate: dto.expectedDate ? new Date(dto.expectedDate) : undefined,
+          note: dto.note,
+          total,
+          createdBy: userId,
+          items: { create: items },
+        },
+        include,
+      });
+    });
+  }
 }
