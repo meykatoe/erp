@@ -81,4 +81,25 @@ export class SalesService {
       });
     });
   }
+
+  update(id: string, dto: CreateSalesDto) {
+    return this.prisma.$transaction(async (tx) => {
+      const order = await tx.salesOrder.findUniqueOrThrow({ where: { id } });
+      if (order.status !== 'DRAFT') throw new BadRequestException('只有草稿可以修改');
+      const { items, total } = this.buildItems(dto);
+      await tx.salesOrderItem.deleteMany({ where: { orderId: id } });
+      return tx.salesOrder.update({
+        where: { id },
+        data: {
+          customerId: dto.customerId,
+          warehouseId: dto.warehouseId,
+          expectedDate: dto.expectedDate ? new Date(dto.expectedDate) : null,
+          note: dto.note,
+          total,
+          items: { create: items },
+        },
+        include,
+      });
+    });
+  }
 }
