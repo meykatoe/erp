@@ -102,4 +102,24 @@ export class SalesService {
       });
     });
   }
+
+  async confirm(id: string) {
+    const order = await this.prisma.salesOrder.findUniqueOrThrow({
+      where: { id },
+      include: { customer: true },
+    });
+    assertTransition(SALES_TRANSITIONS, order.status, 'CONFIRMED', '銷售單');
+
+    const limit = order.customer.creditLimit;
+    if (limit.gt(0)) {
+      const open = await this.prisma.invoice.findMany({
+        where: { kind: 'AR', customerId: order.customerId, status: { in: ['UNPAID', 'PARTIAL'] } },
+      });
+      const owed = sum(open.map((i) => i.amount.sub(i.paidAmount)));
+      if (owed.add(order.total).gt(limit)) {
+        throw new BadRequestException(`超過客戶信用額度 ${limit}(未收 ${owed})`);
+      }
+    }
+    return this.prisma.salesOrder.update({ where: { id }, data: { status: 'CONFIRMED' }, include });
+  }
 }
