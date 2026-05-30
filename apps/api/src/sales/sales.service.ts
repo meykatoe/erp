@@ -122,4 +122,10 @@ export class SalesService {
     }
     return this.prisma.salesOrder.update({ where: { id }, data: { status: 'CONFIRMED' }, include });
   }
+
+  async cancel(id: string) {
+    const order = await this.prisma.salesOrder.findUniqueOrThrow({ where: { id } });
+    assertTransition(SALES_TRANSITIONS, order.status, 'CANCELLED', '銷售單');
+    return this.prisma.salesOrder.update({ where: { id }, data: { status: 'CANCELLED' }, include });
+  }
 }
