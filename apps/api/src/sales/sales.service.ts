@@ -128,4 +128,74 @@ export class SalesService {
     assertTransition(SALES_TRANSITIONS, order.status, 'CANCELLED', '銷售單');
     return this.prisma.salesOrder.update({ where: { id }, data: { status: 'CANCELLED' }, include });
   }
+
+  ship(id: string, dto: FulfillDto, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      await tx.$queryRaw`SELECT id FROM "SalesOrder" WHERE id = ${id} FOR UPDATE`;
+      const order = await tx.salesOrder.findUniqueOrThrow({
+        where: { id },
+        include: { items: true, customer: true },
+      });
+      if (order.status !== 'CONFIRMED' && order.status !== 'PARTIALLY_SHIPPED') {
+        throw new BadRequestException('銷售單尚未確認或已結案');
+      }
+
+      let revenue = D(0);
+      let cogs = D(0);
+      for (const line of dto.items) {
+        const item = order.items.find((i) => i.id === line.itemId);
+        if (!item) throw new BadRequestException('出貨明細不屬於此銷售單');
+        const qty = D(line.quantity);
+        if (qty.gt(item.quantity.sub(item.shippedQty))) {
+          throw new BadRequestException('出貨數量超過未出數量');
+        }
+        const product = await tx.product.findUniqueOrThrow({ where: { id: item.productId } });
+        await this.inventory.applyMovement(tx, {
+          productId: item.productId,
+          warehouseId: order.warehouseId,
+          type: 'SALES_OUT',
+          quantity: qty,
+          refType: 'SO',
+          refId: order.id,
+          createdBy: userId,
+        });
+        await tx.salesOrderItem.update({
+          where: { id: item.id },
+          data: { shippedQty: { increment: qty } },
+        });
+        revenue = revenue.add(lineAmount(qty, item.unitPrice));
+        cogs = cogs.add(round2(qty.mul(product.cost)));
+      }
+
+      const fresh = await tx.salesOrderItem.findMany({ where: { orderId: id } });
+      const done = fresh.every((i) => i.shippedQty.gte(i.quantity));
+      const status = done ? 'SHIPPED' : 'PARTIALLY_SHIPPED';
+      assertTransition(SALES_TRANSITIONS, order.status, status, '銷售單');
+      await tx.salesOrder.update({ where: { id }, data: { status } });
+
+      const lines: PostLine[] = [
+        { code: ACCOUNT.AR, debit: revenue },
+        { code: ACCOUNT.REVENUE, credit: revenue },
+      ];
+      if (cogs.gt(0)) {
+        lines.push({ code: ACCOUNT.COGS, debit: cogs }, { code: ACCOUNT.INVENTORY, credit: cogs });
+      }
+      await this.accounting.post(tx, {
+        memo: `銷貨出庫 ${order.no}`,
+        source: 'SO',
+        sourceId: order.id,
+        createdBy: userId,
+        lines,
+      });
+      await this.accounting.createInvoice(tx, {
+        kind: 'AR',
+        partyId: order.customerId,
+        amount: revenue,
+        termDays: order.customer.termDays,
+        source: 'SO',
+        sourceId: order.id,
+      });
+      return tx.salesOrder.findUniqueOrThrow({ where: { id }, include });
+    });
+  }
 }
