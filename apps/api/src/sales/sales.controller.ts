@@ -15,4 +15,10 @@ export class SalesController {
   list(@Query() q: OrderQueryDto) {
     return this.service.list(q);
   }
+
+  @Get(':id')
+  @Perm(PERMISSIONS.SALES_READ)
+  get(@Param('id') id: string) {
+    return this.service.get(id);
+  }
 }
