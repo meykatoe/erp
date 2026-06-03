@@ -21,4 +21,10 @@ export class SalesController {
   get(@Param('id') id: string) {
     return this.service.get(id);
   }
+
+  @Post()
+  @Perm(PERMISSIONS.SALES_WRITE)
+  create(@Body() dto: CreateSalesDto, @CurrentUser() user: AuthUser) {
+    return this.service.create(dto, user.id);
+  }
 }
