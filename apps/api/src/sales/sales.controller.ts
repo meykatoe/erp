@@ -27,4 +27,10 @@ export class SalesController {
   create(@Body() dto: CreateSalesDto, @CurrentUser() user: AuthUser) {
     return this.service.create(dto, user.id);
   }
+
+  @Put(':id')
+  @Perm(PERMISSIONS.SALES_WRITE)
+  update(@Param('id') id: string, @Body() dto: CreateSalesDto) {
+    return this.service.update(id, dto);
+  }
 }
