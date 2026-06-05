@@ -33,4 +33,10 @@ export class SalesController {
   update(@Param('id') id: string, @Body() dto: CreateSalesDto) {
     return this.service.update(id, dto);
   }
+
+  @Post(':id/confirm')
+  @Perm(PERMISSIONS.SALES_CONFIRM)
+  confirm(@Param('id') id: string) {
+    return this.service.confirm(id);
+  }
 }
