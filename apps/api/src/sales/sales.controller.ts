@@ -39,4 +39,10 @@ export class SalesController {
   confirm(@Param('id') id: string) {
     return this.service.confirm(id);
   }
+
+  @Post(':id/cancel')
+  @Perm(PERMISSIONS.SALES_WRITE)
+  cancel(@Param('id') id: string) {
+    return this.service.cancel(id);
+  }
 }
