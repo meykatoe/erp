@@ -45,4 +45,10 @@ export class SalesController {
   cancel(@Param('id') id: string) {
     return this.service.cancel(id);
   }
+
+  @Post(':id/ship')
+  @Perm(PERMISSIONS.SALES_SHIP)
+  ship(@Param('id') id: string, @Body() dto: FulfillDto, @CurrentUser() user: AuthUser) {
+    return this.service.ship(id, dto, user.id);
+  }
 }
