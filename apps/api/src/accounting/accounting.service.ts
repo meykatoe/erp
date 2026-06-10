@@ -185,4 +185,25 @@ export class AccountingService {
     const totalCredit = sum(rows.map((r) => r.credit));
     return { rows, totalDebit, totalCredit, balanced: totalDebit.eq(totalCredit) };
   }
+
+  async listInvoices(q: PageQueryDto & { kind?: 'AR' | 'AP'; status?: string }) {
+    const where: Prisma.InvoiceWhereInput = {
+      kind: q.kind,
+      status: q.status as never,
+      ...(q.keyword && { no: { contains: q.keyword, mode: 'insensitive' } }),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where,
+        ...pageArgs(q),
+        orderBy: { issueDate: 'desc' },
+        include: {
+          customer: { select: { name: true } },
+          supplier: { select: { name: true } },
+        },
+      }),
+      this.prisma.invoice.count({ where }),
+    ]);
+    return toPage(items, total, q);
+  }
 }
