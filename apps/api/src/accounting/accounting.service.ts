@@ -206,4 +206,49 @@ export class AccountingService {
     ]);
     return toPage(items, total, q);
   }
+
+  async pay(invoiceId: string, amount: number, method = 'TRANSFER', userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const inv = await tx.invoice.findUniqueOrThrow({ where: { id: invoiceId } });
+      if (inv.status === 'VOID' || inv.status === 'PAID') {
+        throw new BadRequestException('此單據不可再收付款');
+      }
+      const outstanding = inv.amount.sub(inv.paidAmount);
+      const pay = round2(amount);
+      if (pay.lte(0) || pay.gt(outstanding)) {
+        throw new BadRequestException(`金額必須介於 0 與未結餘額 ${outstanding} 之間`);
+      }
+      const paid = inv.paidAmount.add(pay);
+      await tx.invoice.update({
+        where: { id: invoiceId },
+        data: { paidAmount: paid, status: paid.gte(inv.amount) ? 'PAID' : 'PARTIAL' },
+      });
+      const payment = await tx.payment.create({
+        data: {
+          no: await this.seq.next('PAY', tx),
+          invoiceId,
+          amount: pay,
+          method,
+          createdBy: userId,
+        },
+      });
+      const isAr = inv.kind === 'AR';
+      await this.post(tx, {
+        memo: `${isAr ? '收款' : '付款'} ${inv.no}`,
+        source: 'PAYMENT',
+        sourceId: payment.id,
+        createdBy: userId,
+        lines: isAr
+          ? [
+              { code: '1000', debit: pay },
+              { code: '1100', credit: pay },
+            ]
+          : [
+              { code: '2100', debit: pay },
+              { code: '1000', credit: pay },
+            ],
+      });
+      return payment;
+    });
+  }
 }
