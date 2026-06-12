@@ -251,4 +251,28 @@ export class AccountingService {
       return payment;
     });
   }
+
+  async aging(kind: 'AR' | 'AP', now = new Date()) {
+    const open = await this.prisma.invoice.findMany({
+      where: { kind, status: { in: ['UNPAID', 'PARTIAL'] } },
+      include: { customer: { select: { name: true } }, supplier: { select: { name: true } } },
+    });
+    const buckets = { current: ZERO, d30: ZERO, d60: ZERO, d90: ZERO, over90: ZERO };
+    for (const inv of open) {
+      const left = inv.amount.sub(inv.paidAmount);
+      const days = Math.floor((now.getTime() - inv.dueDate.getTime()) / 86_400_000);
+      const key =
+        days <= 0
+          ? 'current'
+          : days <= 30
+            ? 'd30'
+            : days <= 60
+              ? 'd60'
+              : days <= 90
+                ? 'd90'
+                : 'over90';
+      buckets[key] = buckets[key].add(left);
+    }
+    return { kind, buckets, count: open.length };
+  }
 }
