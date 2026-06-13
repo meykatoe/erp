@@ -55,4 +55,10 @@ export class AccountingController {
   trialBalance(@Query('asOf') asOf?: string) {
     return this.service.trialBalance(asOf ? new Date(asOf) : undefined);
   }
+
+  @Get('invoices')
+  @Perm(PERMISSIONS.ACCOUNTING_READ)
+  invoices(@Query() q: InvoiceQueryDto) {
+    return this.service.listInvoices(q);
+  }
 }
