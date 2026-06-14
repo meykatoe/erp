@@ -61,4 +61,10 @@ export class AccountingController {
   invoices(@Query() q: InvoiceQueryDto) {
     return this.service.listInvoices(q);
   }
+
+  @Post('invoices/:id/pay')
+  @Perm(PERMISSIONS.ACCOUNTING_WRITE)
+  pay(@Param('id') id: string, @Body() dto: PayDto, @CurrentUser() user: AuthUser) {
+    return this.service.pay(id, dto.amount, dto.method, user.id);
+  }
 }
