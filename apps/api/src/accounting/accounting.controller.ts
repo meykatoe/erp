@@ -67,4 +67,10 @@ export class AccountingController {
   pay(@Param('id') id: string, @Body() dto: PayDto, @CurrentUser() user: AuthUser) {
     return this.service.pay(id, dto.amount, dto.method, user.id);
   }
+
+  @Get('aging/:kind')
+  @Perm(PERMISSIONS.ACCOUNTING_READ)
+  aging(@Param('kind') kind: string) {
+    return this.service.aging(kind.toUpperCase() === 'AP' ? 'AP' : 'AR');
+  }
 }
