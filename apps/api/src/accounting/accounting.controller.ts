@@ -55,4 +55,22 @@ export class AccountingController {
   trialBalance(@Query('asOf') asOf?: string) {
     return this.service.trialBalance(asOf ? new Date(asOf) : undefined);
   }
+
+  @Get('invoices')
+  @Perm(PERMISSIONS.ACCOUNTING_READ)
+  invoices(@Query() q: InvoiceQueryDto) {
+    return this.service.listInvoices(q);
+  }
+
+  @Post('invoices/:id/pay')
+  @Perm(PERMISSIONS.ACCOUNTING_WRITE)
+  pay(@Param('id') id: string, @Body() dto: PayDto, @CurrentUser() user: AuthUser) {
+    return this.service.pay(id, dto.amount, dto.method, user.id);
+  }
+
+  @Get('aging/:kind')
+  @Perm(PERMISSIONS.ACCOUNTING_READ)
+  aging(@Param('kind') kind: string) {
+    return this.service.aging(kind.toUpperCase() === 'AP' ? 'AP' : 'AR');
+  }
 }
