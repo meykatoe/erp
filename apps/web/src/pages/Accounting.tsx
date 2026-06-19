@@ -205,3 +205,105 @@ export function JournalsPage() {
     </section>
   );
 }
+
+export function InvoicesPage() {
+  const { can } = useAuth();
+  const toast = useToast();
+  const [kind, setKind] = useState<'AR' | 'AP'>('AR');
+  const { data, loading, page, setPage, reload } = usePaged<Row>('/accounting/invoices', { kind });
+  const [aging, setAging] = useState<Row | null>(null);
+  const [paying, setPaying] = useState<Row | null>(null);
+  const [amount, setAmount] = useState('');
+
+  useEffect(() => {
+    api<Row>(`/accounting/aging/${kind}`).then(setAging).catch(() => setAging(null));
+  }, [kind, data]);
+
+  const pay = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await api(`/accounting/invoices/${paying!.id}/pay`, { body: { amount: Number(amount) } });
+      toast('ok', kind === 'AR' ? '收款完成' : '付款完成');
+      setPaying(null);
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const b = aging?.buckets;
+  return (
+    <section>
+      <div className="page-head">
+        <h2>應收應付</h2>
+        <div className="tabs">
+          <button className={kind === 'AR' ? 'on' : ''} onClick={() => (setKind('AR'), setPage(1))}>
+            應收帳款
+          </button>
+          <button className={kind === 'AP' ? 'on' : ''} onClick={() => (setKind('AP'), setPage(1))}>
+            應付帳款
+          </button>
+        </div>
+      </div>
+      {b && (
+        <div className="grid">
+          {[
+            ['未到期', b.current],
+            ['逾期 1-30 天', b.d30],
+            ['逾期 31-60 天', b.d60],
+            ['逾期 61-90 天', b.d90],
+            ['逾期 90 天以上', b.over90],
+          ].map(([label, v]) => (
+            <div key={label as string} className="stat">
+              <div className="label">{label as string}</div>
+              <div className="value">{money(v as string)}</div>
+            </div>
+          ))}
+        </div>
+      )}
+      <DataTable
+        loading={loading}
+        rows={data?.items ?? []}
+        columns={[
+          { key: 'no', label: '單號' },
+          { key: 'party', label: kind === 'AR' ? '客戶' : '供應商', render: (r) => r.customer?.name ?? r.supplier?.name },
+          { key: 'issueDate', label: '開立日', render: (r) => date(r.issueDate) },
+          { key: 'dueDate', label: '到期日', render: (r) => date(r.dueDate) },
+          { key: 'amount', label: '金額', align: 'right', render: (r) => money(r.amount) },
+          { key: 'paid', label: '已收付', align: 'right', render: (r) => money(r.paidAmount) },
+          { key: 'left', label: '未結', align: 'right', render: (r) => money(Number(r.amount) - Number(r.paidAmount)) },
+          { key: 'status', label: '狀態', render: (r) => <StatusBadge status={r.status} /> },
+          {
+            key: 'op',
+            label: '',
+            render: (r) =>
+              can('accounting:write') && (r.status === 'UNPAID' || r.status === 'PARTIAL') ? (
+                <button
+                  onClick={() => {
+                    setPaying(r);
+                    setAmount(String(Number(r.amount) - Number(r.paidAmount)));
+                  }}
+                >
+                  {kind === 'AR' ? '收款' : '付款'}
+                </button>
+              ) : null,
+          },
+        ]}
+      />
+      {data && <Pagination page={page} totalPages={data.totalPages} total={data.total} onChange={setPage} />}
+      {paying && (
+        <Modal title={`${kind === 'AR' ? '收款' : '付款'} ${paying.no}`} onClose={() => setPaying(null)}>
+          <form className="form" onSubmit={pay}>
+            <label>
+              <span>金額</span>
+              <input type="number" step="0.01" min="0.01" required value={amount} onChange={(e) => setAmount(e.target.value)} />
+            </label>
+            <footer>
+              <button className="primary">確認</button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+    </section>
+  );
+}
