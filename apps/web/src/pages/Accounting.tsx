@@ -307,3 +307,35 @@ export function InvoicesPage() {
     </section>
   );
 }
+
+export function TrialBalancePage() {
+  const [data, setData] = useState<Row | null>(null);
+  useEffect(() => {
+    api<Row>('/accounting/trial-balance').then(setData).catch(() => {});
+  }, []);
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>試算表</h2>
+        {data && <StatusBadge status={data.balanced ? 'ACTIVE' : 'ABSENT'} />}
+      </div>
+      <DataTable
+        rows={data?.rows ?? []}
+        loading={!data}
+        columns={[
+          { key: 'code', label: '代碼' },
+          { key: 'name', label: '科目' },
+          { key: 'type', label: '類型', render: (r) => ACCOUNT_TYPE_LABEL[r.type] },
+          { key: 'debit', label: '借方', align: 'right', render: (r) => money(r.debit) },
+          { key: 'credit', label: '貸方', align: 'right', render: (r) => money(r.credit) },
+        ]}
+      />
+      {data && (
+        <div className="total">
+          借方合計 {money(data.totalDebit)} / 貸方合計 {money(data.totalCredit)}
+        </div>
+      )}
+    </section>
+  );
+}
