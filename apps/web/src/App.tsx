@@ -2,6 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { Layout } from './components/Layout';
+import { AccountsPage, InvoicesPage, JournalsPage, TrialBalancePage } from './pages/Accounting';
 import { ChangePassword } from './pages/ChangePassword';
 import { InventoryPage, MovementsPage } from './pages/Inventory';
 import { Login } from './pages/Login';
@@ -45,6 +46,11 @@ export default function App() {
         <Route path="warehouses" element={<WarehousesPage />} />
         <Route path="inventory" element={<InventoryPage />} />
         <Route path="inventory/movements" element={<MovementsPage />} />
+
+        <Route path="accounting/invoices" element={<InvoicesPage />} />
+        <Route path="accounting/journals" element={<JournalsPage />} />
+        <Route path="accounting/accounts" element={<AccountsPage />} />
+        <Route path="accounting/trial-balance" element={<TrialBalancePage />} />
 
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

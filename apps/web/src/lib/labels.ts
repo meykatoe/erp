@@ -31,3 +31,18 @@ export const MOVEMENT_LABEL: Record<string, string> = {
   TRANSFER_IN: '調入',
   TRANSFER_OUT: '調出',
 };
+
+export const LEAVE_LABEL: Record<string, string> = {
+  ANNUAL: '特休',
+  SICK: '病假',
+  PERSONAL: '事假',
+  OTHER: '其他',
+};
+
+export const ACCOUNT_TYPE_LABEL: Record<string, string> = {
+  ASSET: '資產',
+  LIABILITY: '負債',
+  EQUITY: '權益',
+  REVENUE: '收入',
+  EXPENSE: '費用',
+};
