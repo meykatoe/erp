@@ -167,4 +167,27 @@ describe('ERP 主要流程', () => {
       expect(d.body).toHaveProperty('receivable');
     });
   });
+
+  describe('權限', () => {
+    it('無權限角色被拒絕', async () => {
+      const role = await auth(api().post('/api/roles'))
+        .send({ name: `viewer-${sfx}`, permissions: ['product:read'] })
+        .expect(201);
+      await auth(api().post('/api/users'))
+        .send({
+          email: `v${sfx}@example.com`,
+          name: '檢視者',
+          password: 'Viewer1234',
+          roleIds: [role.body.id],
+        })
+        .expect(201);
+      const login = await api()
+        .post('/api/auth/login')
+        .send({ email: `v${sfx}@example.com`, password: 'Viewer1234' })
+        .expect(201);
+      const t = login.body.accessToken;
+      await api().get('/api/products').set('Authorization', `Bearer ${t}`).expect(200);
+      await api().get('/api/accounting/accounts').set('Authorization', `Bearer ${t}`).expect(403);
+    });
+  });
 });
