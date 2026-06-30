@@ -185,4 +185,94 @@ export class AccountingService {
     const totalCredit = sum(rows.map((r) => r.credit));
     return { rows, totalDebit, totalCredit, balanced: totalDebit.eq(totalCredit) };
   }
+
+  async listInvoices(q: PageQueryDto & { kind?: 'AR' | 'AP'; status?: string }) {
+    const where: Prisma.InvoiceWhereInput = {
+      kind: q.kind,
+      status: q.status as never,
+      ...(q.keyword && { no: { contains: q.keyword, mode: 'insensitive' } }),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.invoice.findMany({
+        where,
+        ...pageArgs(q),
+        orderBy: { issueDate: 'desc' },
+        include: {
+          customer: { select: { name: true } },
+          supplier: { select: { name: true } },
+        },
+      }),
+      this.prisma.invoice.count({ where }),
+    ]);
+    return toPage(items, total, q);
+  }
+
+  async pay(invoiceId: string, amount: number, method = 'TRANSFER', userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const inv = await tx.invoice.findUniqueOrThrow({ where: { id: invoiceId } });
+      if (inv.status === 'VOID' || inv.status === 'PAID') {
+        throw new BadRequestException('此單據不可再收付款');
+      }
+      const outstanding = inv.amount.sub(inv.paidAmount);
+      const pay = round2(amount);
+      if (pay.lte(0) || pay.gt(outstanding)) {
+        throw new BadRequestException(`金額必須介於 0 與未結餘額 ${outstanding} 之間`);
+      }
+      const paid = inv.paidAmount.add(pay);
+      await tx.invoice.update({
+        where: { id: invoiceId },
+        data: { paidAmount: paid, status: paid.gte(inv.amount) ? 'PAID' : 'PARTIAL' },
+      });
+      const payment = await tx.payment.create({
+        data: {
+          no: await this.seq.next('PAY', tx),
+          invoiceId,
+          amount: pay,
+          method,
+          createdBy: userId,
+        },
+      });
+      const isAr = inv.kind === 'AR';
+      await this.post(tx, {
+        memo: `${isAr ? '收款' : '付款'} ${inv.no}`,
+        source: 'PAYMENT',
+        sourceId: payment.id,
+        createdBy: userId,
+        lines: isAr
+          ? [
+              { code: '1000', debit: pay },
+              { code: '1100', credit: pay },
+            ]
+          : [
+              { code: '2100', debit: pay },
+              { code: '1000', credit: pay },
+            ],
+      });
+      return payment;
+    });
+  }
+
+  async aging(kind: 'AR' | 'AP', now = new Date()) {
+    const open = await this.prisma.invoice.findMany({
+      where: { kind, status: { in: ['UNPAID', 'PARTIAL'] } },
+      include: { customer: { select: { name: true } }, supplier: { select: { name: true } } },
+    });
+    const buckets = { current: ZERO, d30: ZERO, d60: ZERO, d90: ZERO, over90: ZERO };
+    for (const inv of open) {
+      const left = inv.amount.sub(inv.paidAmount);
+      const days = Math.floor((now.getTime() - inv.dueDate.getTime()) / 86_400_000);
+      const key =
+        days <= 0
+          ? 'current'
+          : days <= 30
+            ? 'd30'
+            : days <= 60
+              ? 'd60'
+              : days <= 90
+                ? 'd90'
+                : 'over90';
+      buckets[key] = buckets[key].add(left);
+    }
+    return { kind, buckets, count: open.length };
+  }
 }

@@ -15,6 +15,14 @@ enum PurchaseStatus {
   CANCELLED
 }
 
+enum SalesStatus {
+  DRAFT
+  CONFIRMED
+  PARTIALLY_SHIPPED
+  SHIPPED
+  CANCELLED
+}
+
 enum MovementType {
   PURCHASE_IN
   SALES_OUT
@@ -123,6 +131,7 @@ model Product {
   stocks        StockLevel[]
   movements     StockMovement[]
   purchaseItems PurchaseOrderItem[]
+  salesItems    SalesOrderItem[]
 
   @@index([name])
 }
@@ -136,21 +145,23 @@ model Warehouse {
   stocks    StockLevel[]
   movements StockMovement[]
   purchases PurchaseOrder[]
+  sales     SalesOrder[]
 }
 
 model Customer {
-  id          String    @id @default(uuid())
-  code        String    @unique
+  id          String       @id @default(uuid())
+  code        String       @unique
   name        String
   contact     String?
   phone       String?
   email       String?
   address     String?
   taxId       String?
-  creditLimit Decimal   @default(0) @db.Decimal(18, 2)
-  termDays    Int       @default(30)
-  active      Boolean   @default(true)
-  createdAt   DateTime  @default(now())
+  creditLimit Decimal      @default(0) @db.Decimal(18, 2)
+  termDays    Int          @default(30)
+  active      Boolean      @default(true)
+  createdAt   DateTime     @default(now())
+  orders      SalesOrder[]
   invoices    Invoice[]
 
   @@index([name])
@@ -234,6 +245,39 @@ model PurchaseOrderItem {
   amount      Decimal       @db.Decimal(18, 2)
   order       PurchaseOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product     Product       @relation(fields: [productId], references: [id])
+}
+
+model SalesOrder {
+  id           String           @id @default(uuid())
+  no           String           @unique
+  customerId   String
+  warehouseId  String
+  status       SalesStatus      @default(DRAFT)
+  orderDate    DateTime         @default(now())
+  expectedDate DateTime?
+  total        Decimal          @default(0) @db.Decimal(18, 2)
+  note         String?
+  createdBy    String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  customer     Customer         @relation(fields: [customerId], references: [id])
+  warehouse    Warehouse        @relation(fields: [warehouseId], references: [id])
+  items        SalesOrderItem[]
+
+  @@index([status])
+  @@index([orderDate])
+}
+
+model SalesOrderItem {
+  id         String     @id @default(uuid())
+  orderId    String
+  productId  String
+  quantity   Decimal    @db.Decimal(18, 3)
+  shippedQty Decimal    @default(0) @db.Decimal(18, 3)
+  unitPrice  Decimal    @db.Decimal(18, 4)
+  amount     Decimal    @db.Decimal(18, 2)
+  order      SalesOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product    @relation(fields: [productId], references: [id])
 }
 
 model Account {
