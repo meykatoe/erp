@@ -11,3 +11,11 @@ export function withholdingTax(taxable: Num) {
   const high = t.gt(TAX_MID) ? t.sub(TAX_MID) : D(0);
   return round2(mid.mul(0.05).add(high.mul(0.12)));
 }
+
+export function calcPayroll(base: Num, bonus: Num = 0) {
+  const gross = D(base).add(D(bonus));
+  const deduction = round2(gross.mul(INSURANCE_RATE));
+  const tax = withholdingTax(gross.sub(deduction));
+  const net = gross.sub(deduction).sub(tax);
+  return { gross: round2(gross), deduction, tax, net: round2(net) };
+}
