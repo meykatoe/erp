@@ -30,3 +30,8 @@ export function leaveDays(start: Date, end: Date) {
   }
   return days;
 }
+
+export function isLate(checkIn: Date, limitHour = 9, limitMinute = 15) {
+  const minutes = checkIn.getHours() * 60 + checkIn.getMinutes();
+  return minutes > limitHour * 60 + limitMinute;
+}
