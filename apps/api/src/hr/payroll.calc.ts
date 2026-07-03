@@ -19,3 +19,14 @@ export function calcPayroll(base: Num, bonus: Num = 0) {
   const net = gross.sub(deduction).sub(tax);
   return { gross: round2(gross), deduction, tax, net: round2(net) };
 }
+
+export function leaveDays(start: Date, end: Date) {
+  let days = 0;
+  const cur = new Date(start);
+  while (cur <= end) {
+    const dow = cur.getUTCDay();
+    if (dow !== 0 && dow !== 6) days++;
+    cur.setUTCDate(cur.getUTCDate() + 1);
+  }
+  return days;
+}
