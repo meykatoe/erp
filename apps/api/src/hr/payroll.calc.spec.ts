@@ -8,4 +8,8 @@ describe('payroll', () => {
   it('中間級距課 5%', () => {
     expect(withholdingTax(60_000).toString()).toBe('1000');
   });
+
+  it('高級距加課 12%', () => {
+    expect(withholdingTax(100_000).toString()).toBe('4400');
+  });
 });
