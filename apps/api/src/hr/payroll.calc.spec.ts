@@ -12,4 +12,17 @@ describe('payroll', () => {
   it('高級距加課 12%', () => {
     expect(withholdingTax(100_000).toString()).toBe('4400');
   });
+
+  it('實領等於應發扣除保險與稅', () => {
+    const r = calcPayroll(50_000, 0);
+    expect(r.deduction.toString()).toBe('3000');
+    expect(r.tax.toString()).toBe('350');
+    expect(r.net.toString()).toBe('46650');
+  });
+});
+
+describe('leave and attendance', () => {
+  it('請假天數排除週末', () => {
+    expect(leaveDays(new Date('2026-03-06'), new Date('2026-03-10'))).toBe(3);
+  });
 });
