@@ -25,4 +25,9 @@ describe('leave and attendance', () => {
   it('請假天數排除週末', () => {
     expect(leaveDays(new Date('2026-03-06'), new Date('2026-03-10'))).toBe(3);
   });
+
+  it('超過九點十五分算遲到', () => {
+    expect(isLate(new Date(2026, 0, 5, 9, 16))).toBe(true);
+    expect(isLate(new Date(2026, 0, 5, 9, 15))).toBe(false);
+  });
 });
