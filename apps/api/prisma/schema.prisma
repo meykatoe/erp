@@ -57,6 +57,12 @@ enum InvoiceStatus {
   VOID
 }
 
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  RESIGNED
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -67,6 +73,7 @@ model User {
   updatedAt    DateTime   @updatedAt
   roles        UserRole[]
   auditLogs    AuditLog[]
+  employee     Employee?
 }
 
 model Role {
@@ -350,4 +357,26 @@ model Payment {
   note      String?
   createdBy String?
   invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  employees Employee[]
+}
+
+model Employee {
+  id           String         @id @default(uuid())
+  no           String         @unique
+  name         String
+  departmentId String?
+  title        String?
+  hireDate     DateTime
+  salary       Decimal        @db.Decimal(18, 2)
+  status       EmployeeStatus @default(ACTIVE)
+  email        String?
+  phone        String?
+  userId       String?        @unique
+  department   Department?    @relation(fields: [departmentId], references: [id])
+  user         User?          @relation(fields: [userId], references: [id])
 }
