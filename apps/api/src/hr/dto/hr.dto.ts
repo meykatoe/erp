@@ -17,3 +17,36 @@ export class DepartmentDto {
   @MinLength(1)
   name!: string;
 }
+
+export class CreateEmployeeDto {
+  @IsString()
+  @MinLength(1)
+  name!: string;
+
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
+
+  @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsDateString()
+  hireDate!: string;
+
+  @IsNumber()
+  @Min(0)
+  salary!: number;
+
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @IsString()
+  phone?: string;
+
+  @IsOptional()
+  @IsString()
+  userId?: string;
+}
