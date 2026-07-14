@@ -30,4 +30,8 @@ export class HrService {
       include: { _count: { select: { employees: true } } },
     });
   }
+
+  createDepartment(name: string) {
+    return this.prisma.department.create({ data: { name } });
+  }
 }
