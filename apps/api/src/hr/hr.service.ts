@@ -34,4 +34,11 @@ export class HrService {
   createDepartment(name: string) {
     return this.prisma.department.create({ data: { name } });
   }
+
+  async removeDepartment(id: string) {
+    const n = await this.prisma.employee.count({ where: { departmentId: id } });
+    if (n > 0) throw new BadRequestException('部門仍有員工');
+    await this.prisma.department.delete({ where: { id } });
+    return { ok: true };
+  }
 }
