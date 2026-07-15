@@ -41,4 +41,26 @@ export class HrService {
     await this.prisma.department.delete({ where: { id } });
     return { ok: true };
   }
+
+  async employees(q: PageQueryDto & { departmentId?: string }) {
+    const where: Prisma.EmployeeWhereInput = {
+      departmentId: q.departmentId,
+      ...(q.keyword && {
+        OR: [
+          { name: { contains: q.keyword, mode: 'insensitive' } },
+          { no: { contains: q.keyword, mode: 'insensitive' } },
+        ],
+      }),
+    };
+    const [items, total] = await Promise.all([
+      this.prisma.employee.findMany({
+        where,
+        ...pageArgs(q),
+        orderBy: { no: 'asc' },
+        include: { department: { select: { name: true } } },
+      }),
+      this.prisma.employee.count({ where }),
+    ]);
+    return toPage(items, total, q);
+  }
 }
