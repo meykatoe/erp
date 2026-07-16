@@ -63,4 +63,11 @@ export class HrService {
     ]);
     return toPage(items, total, q);
   }
+
+  employee(id: string) {
+    return this.prisma.employee.findUniqueOrThrow({
+      where: { id },
+      include: { department: true },
+    });
+  }
 }
