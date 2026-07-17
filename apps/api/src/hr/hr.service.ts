@@ -70,4 +70,12 @@ export class HrService {
       include: { department: true },
     });
   }
+
+  async createEmployee(dto: CreateEmployeeDto) {
+    return this.prisma.$transaction(async (tx) =>
+      tx.employee.create({
+        data: { ...dto, hireDate: new Date(dto.hireDate), no: await this.seq.next('EMP', tx) },
+      }),
+    );
+  }
 }
