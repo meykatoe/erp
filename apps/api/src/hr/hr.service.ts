@@ -78,4 +78,8 @@ export class HrService {
       }),
     );
   }
+
+  updateEmployee(id: string, dto: UpdateEmployeeDto) {
+    return this.prisma.employee.update({ where: { id }, data: dto });
+  }
 }
