@@ -23,4 +23,10 @@ export class HrController {
   departments() {
     return this.service.departments();
   }
+
+  @Post('departments')
+  @Perm(PERMISSIONS.HR_WRITE)
+  createDepartment(@Body() dto: DepartmentDto) {
+    return this.service.createDepartment(dto.name);
+  }
 }
