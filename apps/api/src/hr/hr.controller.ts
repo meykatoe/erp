@@ -29,4 +29,10 @@ export class HrController {
   createDepartment(@Body() dto: DepartmentDto) {
     return this.service.createDepartment(dto.name);
   }
+
+  @Delete('departments/:id')
+  @Perm(PERMISSIONS.HR_WRITE)
+  removeDepartment(@Param('id') id: string) {
+    return this.service.removeDepartment(id);
+  }
 }
