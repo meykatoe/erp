@@ -35,4 +35,10 @@ export class HrController {
   removeDepartment(@Param('id') id: string) {
     return this.service.removeDepartment(id);
   }
+
+  @Get('employees')
+  @Perm(PERMISSIONS.HR_READ)
+  employees(@Query() q: PageQueryDto & { departmentId?: string }) {
+    return this.service.employees(q);
+  }
 }
