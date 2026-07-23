@@ -41,4 +41,10 @@ export class HrController {
   employees(@Query() q: PageQueryDto & { departmentId?: string }) {
     return this.service.employees(q);
   }
+
+  @Get('employees/:id')
+  @Perm(PERMISSIONS.HR_READ)
+  employee(@Param('id') id: string) {
+    return this.service.employee(id);
+  }
 }
