@@ -53,4 +53,10 @@ export class HrController {
   createEmployee(@Body() dto: CreateEmployeeDto) {
     return this.service.createEmployee(dto);
   }
+
+  @Patch('employees/:id')
+  @Perm(PERMISSIONS.HR_WRITE)
+  updateEmployee(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
+    return this.service.updateEmployee(id, dto);
+  }
 }
