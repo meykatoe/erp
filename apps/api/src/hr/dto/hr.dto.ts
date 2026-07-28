@@ -81,3 +81,8 @@ export class UpdateEmployeeDto {
   @IsString()
   phone?: string;
 }
+
+export class ClockDto {
+  @IsString()
+  employeeId!: string;
+}
