@@ -82,4 +82,17 @@ export class HrService {
   updateEmployee(id: string, dto: UpdateEmployeeDto) {
     return this.prisma.employee.update({ where: { id }, data: dto });
   }
+
+  async clockIn(employeeId: string, now = new Date()) {
+    const date = day(now);
+    const existing = await this.prisma.attendance.findUnique({
+      where: { employeeId_date: { employeeId, date } },
+    });
+    if (existing?.checkIn) throw new BadRequestException('今日已打過上班卡');
+    return this.prisma.attendance.upsert({
+      where: { employeeId_date: { employeeId, date } },
+      create: { employeeId, date, checkIn: now, status: isLate(now) ? 'LATE' : 'NORMAL' },
+      update: { checkIn: now, status: isLate(now) ? 'LATE' : 'NORMAL' },
+    });
+  }
 }
