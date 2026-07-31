@@ -95,4 +95,13 @@ export class HrService {
       update: { checkIn: now, status: isLate(now) ? 'LATE' : 'NORMAL' },
     });
   }
+
+  async clockOut(employeeId: string, now = new Date()) {
+    const date = day(now);
+    const row = await this.prisma.attendance.findUnique({
+      where: { employeeId_date: { employeeId, date } },
+    });
+    if (!row?.checkIn) throw new BadRequestException('今日尚未打上班卡');
+    return this.prisma.attendance.update({ where: { id: row.id }, data: { checkOut: now } });
+  }
 }
