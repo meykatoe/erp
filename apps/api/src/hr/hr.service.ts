@@ -104,4 +104,17 @@ export class HrService {
     if (!row?.checkIn) throw new BadRequestException('今日尚未打上班卡');
     return this.prisma.attendance.update({ where: { id: row.id }, data: { checkOut: now } });
   }
+
+  attendance(employeeId?: string, month?: string) {
+    const start = month ? new Date(`${month}-01T00:00:00Z`) : undefined;
+    const end = start
+      ? new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, 1))
+      : undefined;
+    return this.prisma.attendance.findMany({
+      where: { employeeId, date: { gte: start, lt: end } },
+      orderBy: { date: 'desc' },
+      include: { employee: { select: { no: true, name: true } } },
+      take: 500,
+    });
+  }
 }
