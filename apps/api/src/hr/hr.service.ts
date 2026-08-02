@@ -117,4 +117,15 @@ export class HrService {
       take: 500,
     });
   }
+
+  async createLeave(dto: CreateLeaveDto) {
+    const start = new Date(dto.startDate);
+    const end = new Date(dto.endDate);
+    if (end < start) throw new BadRequestException('結束日不可早於開始日');
+    const days = leaveDays(start, end);
+    if (days === 0) throw new BadRequestException('請假區間內沒有工作日');
+    return this.prisma.leaveRequest.create({
+      data: { ...dto, startDate: start, endDate: end, days },
+    });
+  }
 }
