@@ -128,4 +128,13 @@ export class HrService {
       data: { ...dto, startDate: start, endDate: end, days },
     });
   }
+
+  leaves(status?: string) {
+    return this.prisma.leaveRequest.findMany({
+      where: { status: status as never },
+      orderBy: { createdAt: 'desc' },
+      include: { employee: { select: { no: true, name: true } } },
+      take: 200,
+    });
+  }
 }
