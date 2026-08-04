@@ -137,4 +137,13 @@ export class HrService {
       take: 200,
     });
   }
+
+  async decideLeave(id: string, approve: boolean, approverId: string) {
+    const leave = await this.prisma.leaveRequest.findUniqueOrThrow({ where: { id } });
+    if (leave.status !== 'PENDING') throw new BadRequestException('此申請已處理');
+    return this.prisma.leaveRequest.update({
+      where: { id },
+      data: { status: approve ? 'APPROVED' : 'REJECTED', approverId },
+    });
+  }
 }
