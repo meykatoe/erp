@@ -59,4 +59,10 @@ export class HrController {
   updateEmployee(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
     return this.service.updateEmployee(id, dto);
   }
+
+  @Post('attendance/clock-in')
+  @Perm(PERMISSIONS.HR_WRITE)
+  clockIn(@Body() dto: ClockDto) {
+    return this.service.clockIn(dto.employeeId);
+  }
 }
