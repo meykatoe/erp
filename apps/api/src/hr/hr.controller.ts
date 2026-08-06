@@ -65,4 +65,10 @@ export class HrController {
   clockIn(@Body() dto: ClockDto) {
     return this.service.clockIn(dto.employeeId);
   }
+
+  @Post('attendance/clock-out')
+  @Perm(PERMISSIONS.HR_WRITE)
+  clockOut(@Body() dto: ClockDto) {
+    return this.service.clockOut(dto.employeeId);
+  }
 }
