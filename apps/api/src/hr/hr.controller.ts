@@ -71,4 +71,10 @@ export class HrController {
   clockOut(@Body() dto: ClockDto) {
     return this.service.clockOut(dto.employeeId);
   }
+
+  @Get('attendance')
+  @Perm(PERMISSIONS.HR_READ)
+  attendance(@Query('employeeId') employeeId?: string, @Query('month') month?: string) {
+    return this.service.attendance(employeeId, month);
+  }
 }
