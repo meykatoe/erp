@@ -77,4 +77,10 @@ export class HrController {
   attendance(@Query('employeeId') employeeId?: string, @Query('month') month?: string) {
     return this.service.attendance(employeeId, month);
   }
+
+  @Get('leaves')
+  @Perm(PERMISSIONS.HR_READ)
+  leaves(@Query('status') status?: string) {
+    return this.service.leaves(status);
+  }
 }
