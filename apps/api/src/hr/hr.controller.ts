@@ -83,4 +83,10 @@ export class HrController {
   leaves(@Query('status') status?: string) {
     return this.service.leaves(status);
   }
+
+  @Post('leaves')
+  @Perm(PERMISSIONS.HR_WRITE)
+  createLeave(@Body() dto: CreateLeaveDto) {
+    return this.service.createLeave(dto);
+  }
 }
