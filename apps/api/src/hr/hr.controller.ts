@@ -89,4 +89,10 @@ export class HrController {
   createLeave(@Body() dto: CreateLeaveDto) {
     return this.service.createLeave(dto);
   }
+
+  @Post('leaves/:id/approve')
+  @Perm(PERMISSIONS.HR_WRITE)
+  approve(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.service.decideLeave(id, true, user.id);
+  }
 }
