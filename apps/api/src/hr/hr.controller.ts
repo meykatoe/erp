@@ -95,4 +95,10 @@ export class HrController {
   approve(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.service.decideLeave(id, true, user.id);
   }
+
+  @Post('leaves/:id/reject')
+  @Perm(PERMISSIONS.HR_WRITE)
+  reject(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.service.decideLeave(id, false, user.id);
+  }
 }
