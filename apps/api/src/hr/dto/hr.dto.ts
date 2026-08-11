@@ -81,3 +81,26 @@ export class UpdateEmployeeDto {
   @IsString()
   phone?: string;
 }
+
+export class ClockDto {
+  @IsString()
+  employeeId!: string;
+}
+
+export class CreateLeaveDto {
+  @IsString()
+  employeeId!: string;
+
+  @IsEnum(LeaveType)
+  type!: LeaveType;
+
+  @IsDateString()
+  startDate!: string;
+
+  @IsDateString()
+  endDate!: string;
+
+  @IsOptional()
+  @IsString()
+  reason?: string;
+}

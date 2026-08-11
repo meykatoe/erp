@@ -59,4 +59,46 @@ export class HrController {
   updateEmployee(@Param('id') id: string, @Body() dto: UpdateEmployeeDto) {
     return this.service.updateEmployee(id, dto);
   }
+
+  @Post('attendance/clock-in')
+  @Perm(PERMISSIONS.HR_WRITE)
+  clockIn(@Body() dto: ClockDto) {
+    return this.service.clockIn(dto.employeeId);
+  }
+
+  @Post('attendance/clock-out')
+  @Perm(PERMISSIONS.HR_WRITE)
+  clockOut(@Body() dto: ClockDto) {
+    return this.service.clockOut(dto.employeeId);
+  }
+
+  @Get('attendance')
+  @Perm(PERMISSIONS.HR_READ)
+  attendance(@Query('employeeId') employeeId?: string, @Query('month') month?: string) {
+    return this.service.attendance(employeeId, month);
+  }
+
+  @Get('leaves')
+  @Perm(PERMISSIONS.HR_READ)
+  leaves(@Query('status') status?: string) {
+    return this.service.leaves(status);
+  }
+
+  @Post('leaves')
+  @Perm(PERMISSIONS.HR_WRITE)
+  createLeave(@Body() dto: CreateLeaveDto) {
+    return this.service.createLeave(dto);
+  }
+
+  @Post('leaves/:id/approve')
+  @Perm(PERMISSIONS.HR_WRITE)
+  approve(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.service.decideLeave(id, true, user.id);
+  }
+
+  @Post('leaves/:id/reject')
+  @Perm(PERMISSIONS.HR_WRITE)
+  reject(@Param('id') id: string, @CurrentUser() user: AuthUser) {
+    return this.service.decideLeave(id, false, user.id);
+  }
 }
