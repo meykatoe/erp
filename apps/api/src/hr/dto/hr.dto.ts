@@ -109,3 +109,9 @@ export class PeriodDto {
   @Matches(/^\d{4}-(0[1-9]|1[0-2])$/, { message: '期間格式須為 YYYY-MM' })
   period!: string;
 }
+
+export class BonusDto {
+  @IsNumber()
+  @Min(0)
+  bonus!: number;
+}
