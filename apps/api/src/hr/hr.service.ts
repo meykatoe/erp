@@ -146,4 +146,25 @@ export class HrService {
       data: { status: approve ? 'APPROVED' : 'REJECTED', approverId },
     });
   }
+
+  async generatePayroll(period: string) {
+    const employees = await this.prisma.employee.findMany({ where: { status: 'ACTIVE' } });
+    const done = await this.prisma.payroll.findMany({ where: { period } });
+    const skip = new Set(done.map((p) => p.employeeId));
+    const data = employees
+      .filter((e) => !skip.has(e.id))
+      .map((e) => {
+        const r = calcPayroll(e.salary);
+        return {
+          employeeId: e.id,
+          period,
+          base: e.salary,
+          deduction: r.deduction,
+          tax: r.tax,
+          net: r.net,
+        };
+      });
+    await this.prisma.payroll.createMany({ data });
+    return { created: data.length, skipped: skip.size };
+  }
 }
