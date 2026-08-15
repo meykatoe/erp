@@ -167,4 +167,13 @@ export class HrService {
     await this.prisma.payroll.createMany({ data });
     return { created: data.length, skipped: skip.size };
   }
+
+  payrolls(period?: string) {
+    return this.prisma.payroll.findMany({
+      where: { period },
+      orderBy: [{ period: 'desc' }, { employee: { no: 'asc' } }],
+      include: { employee: { select: { no: true, name: true } } },
+      take: 500,
+    });
+  }
 }
