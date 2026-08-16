@@ -176,4 +176,14 @@ export class HrService {
       take: 500,
     });
   }
+
+  async setBonus(id: string, bonus: number) {
+    const p = await this.prisma.payroll.findUniqueOrThrow({ where: { id } });
+    if (p.status !== 'DRAFT') throw new BadRequestException('已發放的薪資不可修改');
+    const r = calcPayroll(p.base, bonus);
+    return this.prisma.payroll.update({
+      where: { id },
+      data: { bonus, deduction: r.deduction, tax: r.tax, net: r.net },
+    });
+  }
 }
