@@ -186,4 +186,31 @@ export class HrService {
       data: { bonus, deduction: r.deduction, tax: r.tax, net: r.net },
     });
   }
+
+  payPayroll(period: string, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const rows = await tx.payroll.findMany({ where: { period, status: 'DRAFT' } });
+      if (rows.length === 0) throw new BadRequestException('沒有待發放的薪資');
+      const gross = sum(rows.map((r) => r.base.add(r.bonus)));
+      const net = sum(rows.map((r) => r.net));
+      const withheld = gross.sub(net);
+      await tx.payroll.updateMany({
+        where: { period, status: 'DRAFT' },
+        data: { status: 'PAID', paidAt: new Date() },
+      });
+      const lines: PostLine[] = [
+        { code: ACCOUNT.SALARY, debit: gross },
+        { code: ACCOUNT.CASH, credit: net },
+      ];
+      if (withheld.gt(0)) lines.push({ code: ACCOUNT.WITHHOLDING, credit: withheld });
+      await this.accounting.post(tx, {
+        memo: `${period} 薪資發放`,
+        source: 'PAYROLL',
+        sourceId: period,
+        createdBy: userId,
+        lines,
+      });
+      return { paid: rows.length, gross: D(gross), net: D(net) };
+    });
+  }
 }
