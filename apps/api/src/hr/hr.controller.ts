@@ -101,4 +101,10 @@ export class HrController {
   reject(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.service.decideLeave(id, false, user.id);
   }
+
+  @Get('payrolls')
+  @Perm(PERMISSIONS.PAYROLL_READ)
+  payrolls(@Query('period') period?: string) {
+    return this.service.payrolls(period);
+  }
 }
