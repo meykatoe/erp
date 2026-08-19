@@ -107,4 +107,10 @@ export class HrController {
   payrolls(@Query('period') period?: string) {
     return this.service.payrolls(period);
   }
+
+  @Post('payrolls/generate')
+  @Perm(PERMISSIONS.PAYROLL_WRITE)
+  generate(@Body() dto: PeriodDto) {
+    return this.service.generatePayroll(dto.period);
+  }
 }
