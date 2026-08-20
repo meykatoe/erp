@@ -119,4 +119,10 @@ export class HrController {
   bonus(@Param('id') id: string, @Body() dto: BonusDto) {
     return this.service.setBonus(id, dto.bonus);
   }
+
+  @Post('payrolls/pay')
+  @Perm(PERMISSIONS.PAYROLL_WRITE)
+  pay(@Body() dto: PeriodDto, @CurrentUser() user: AuthUser) {
+    return this.service.payPayroll(dto.period, user.id);
+  }
 }
