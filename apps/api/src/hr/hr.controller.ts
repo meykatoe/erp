@@ -113,4 +113,10 @@ export class HrController {
   generate(@Body() dto: PeriodDto) {
     return this.service.generatePayroll(dto.period);
   }
+
+  @Patch('payrolls/:id/bonus')
+  @Perm(PERMISSIONS.PAYROLL_WRITE)
+  bonus(@Param('id') id: string, @Body() dto: BonusDto) {
+    return this.service.setBonus(id, dto.bonus);
+  }
 }
