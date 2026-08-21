@@ -146,4 +146,71 @@ export class HrService {
       data: { status: approve ? 'APPROVED' : 'REJECTED', approverId },
     });
   }
+
+  async generatePayroll(period: string) {
+    const employees = await this.prisma.employee.findMany({ where: { status: 'ACTIVE' } });
+    const done = await this.prisma.payroll.findMany({ where: { period } });
+    const skip = new Set(done.map((p) => p.employeeId));
+    const data = employees
+      .filter((e) => !skip.has(e.id))
+      .map((e) => {
+        const r = calcPayroll(e.salary);
+        return {
+          employeeId: e.id,
+          period,
+          base: e.salary,
+          deduction: r.deduction,
+          tax: r.tax,
+          net: r.net,
+        };
+      });
+    await this.prisma.payroll.createMany({ data });
+    return { created: data.length, skipped: skip.size };
+  }
+
+  payrolls(period?: string) {
+    return this.prisma.payroll.findMany({
+      where: { period },
+      orderBy: [{ period: 'desc' }, { employee: { no: 'asc' } }],
+      include: { employee: { select: { no: true, name: true } } },
+      take: 500,
+    });
+  }
+
+  async setBonus(id: string, bonus: number) {
+    const p = await this.prisma.payroll.findUniqueOrThrow({ where: { id } });
+    if (p.status !== 'DRAFT') throw new BadRequestException('已發放的薪資不可修改');
+    const r = calcPayroll(p.base, bonus);
+    return this.prisma.payroll.update({
+      where: { id },
+      data: { bonus, deduction: r.deduction, tax: r.tax, net: r.net },
+    });
+  }
+
+  payPayroll(period: string, userId?: string) {
+    return this.prisma.$transaction(async (tx) => {
+      const rows = await tx.payroll.findMany({ where: { period, status: 'DRAFT' } });
+      if (rows.length === 0) throw new BadRequestException('沒有待發放的薪資');
+      const gross = sum(rows.map((r) => r.base.add(r.bonus)));
+      const net = sum(rows.map((r) => r.net));
+      const withheld = gross.sub(net);
+      await tx.payroll.updateMany({
+        where: { period, status: 'DRAFT' },
+        data: { status: 'PAID', paidAt: new Date() },
+      });
+      const lines: PostLine[] = [
+        { code: ACCOUNT.SALARY, debit: gross },
+        { code: ACCOUNT.CASH, credit: net },
+      ];
+      if (withheld.gt(0)) lines.push({ code: ACCOUNT.WITHHOLDING, credit: withheld });
+      await this.accounting.post(tx, {
+        memo: `${period} 薪資發放`,
+        source: 'PAYROLL',
+        sourceId: period,
+        createdBy: userId,
+        lines,
+      });
+      return { paid: rows.length, gross: D(gross), net: D(net) };
+    });
+  }
 }

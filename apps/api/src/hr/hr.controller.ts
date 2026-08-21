@@ -101,4 +101,28 @@ export class HrController {
   reject(@Param('id') id: string, @CurrentUser() user: AuthUser) {
     return this.service.decideLeave(id, false, user.id);
   }
+
+  @Get('payrolls')
+  @Perm(PERMISSIONS.PAYROLL_READ)
+  payrolls(@Query('period') period?: string) {
+    return this.service.payrolls(period);
+  }
+
+  @Post('payrolls/generate')
+  @Perm(PERMISSIONS.PAYROLL_WRITE)
+  generate(@Body() dto: PeriodDto) {
+    return this.service.generatePayroll(dto.period);
+  }
+
+  @Patch('payrolls/:id/bonus')
+  @Perm(PERMISSIONS.PAYROLL_WRITE)
+  bonus(@Param('id') id: string, @Body() dto: BonusDto) {
+    return this.service.setBonus(id, dto.bonus);
+  }
+
+  @Post('payrolls/pay')
+  @Perm(PERMISSIONS.PAYROLL_WRITE)
+  pay(@Body() dto: PeriodDto, @CurrentUser() user: AuthUser) {
+    return this.service.payPayroll(dto.period, user.id);
+  }
 }
