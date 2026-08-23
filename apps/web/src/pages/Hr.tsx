@@ -53,3 +53,57 @@ export function EmployeesPage() {
     />
   );
 }
+
+export function DepartmentsPage() {
+  const { can } = useAuth();
+  const toast = useToast();
+  const { data, loading, reload } = useList<Row>('/hr/departments');
+  const [name, setName] = useState('');
+
+  const add = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await api('/hr/departments', { body: { name } });
+      setName('');
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const remove = async (r: Row) => {
+    try {
+      await api(`/hr/departments/${r.id}`, { method: 'DELETE' });
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>部門</h2>
+        {can('hr:write') && (
+          <form className="actions" onSubmit={add}>
+            <input placeholder="部門名稱" value={name} onChange={(e) => setName(e.target.value)} required />
+            <button className="primary">新增</button>
+          </form>
+        )}
+      </div>
+      <DataTable
+        loading={loading}
+        rows={data}
+        columns={[
+          { key: 'name', label: '部門' },
+          { key: 'count', label: '人數', align: 'right', render: (r) => r._count.employees },
+          {
+            key: 'op',
+            label: '',
+            render: (r) => can('hr:write') && <button className="danger" onClick={() => remove(r)}>刪除</button>,
+          },
+        ]}
+      />
+    </section>
+  );
+}
