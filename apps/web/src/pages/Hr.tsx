@@ -107,3 +107,68 @@ export function DepartmentsPage() {
     </section>
   );
 }
+
+export function AttendancePage() {
+  const { can } = useAuth();
+  const toast = useToast();
+  const { options } = useOptions<Row>('/hr/employees', (e) => `${e.no} ${e.name}`);
+  const [employeeId, setEmployeeId] = useState('');
+  const [month, setMonth] = useState(today().slice(0, 7));
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    api<Row[]>('/hr/attendance', { query: { employeeId, month } })
+      .then(setRows)
+      .finally(() => setLoading(false));
+  };
+  useEffect(load, [employeeId, month]);
+
+  const clock = async (kind: 'clock-in' | 'clock-out') => {
+    if (!employeeId) return toast('error', '請先選擇員工');
+    try {
+      await api(`/hr/attendance/${kind}`, { body: { employeeId } });
+      toast('ok', kind === 'clock-in' ? '上班打卡成功' : '下班打卡成功');
+      load();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>考勤</h2>
+        <div className="actions">
+          <select value={employeeId} onChange={(e) => setEmployeeId(e.target.value)}>
+            <option value="">全部員工</option>
+            {options.map((o) => (
+              <option key={o.value} value={o.value}>
+                {o.label}
+              </option>
+            ))}
+          </select>
+          <input type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
+          {can('hr:write') && (
+            <>
+              <button onClick={() => clock('clock-in')}>上班打卡</button>
+              <button onClick={() => clock('clock-out')}>下班打卡</button>
+            </>
+          )}
+        </div>
+      </div>
+      <DataTable
+        loading={loading}
+        rows={rows}
+        columns={[
+          { key: 'date', label: '日期', render: (r) => date(r.date) },
+          { key: 'emp', label: '員工', render: (r) => `${r.employee.no} ${r.employee.name}` },
+          { key: 'in', label: '上班', render: (r) => (r.checkIn ? datetime(r.checkIn) : '-') },
+          { key: 'out', label: '下班', render: (r) => (r.checkOut ? datetime(r.checkOut) : '-') },
+          { key: 'status', label: '狀態', render: (r) => <StatusBadge status={r.status} /> },
+        ]}
+      />
+    </section>
+  );
+}
