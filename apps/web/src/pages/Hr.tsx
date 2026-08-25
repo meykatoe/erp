@@ -172,3 +172,112 @@ export function AttendancePage() {
     </section>
   );
 }
+
+export function LeavesPage() {
+  const { can } = useAuth();
+  const toast = useToast();
+  const { options } = useOptions<Row>('/hr/employees', (e) => `${e.no} ${e.name}`);
+  const { data, loading, reload } = useList<Row>('/hr/leaves');
+  const [open, setOpen] = useState(false);
+  const [form, setForm] = useState<Record<string, string>>({ type: 'ANNUAL', startDate: today(), endDate: today() });
+
+  const submit = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      await api('/hr/leaves', { body: { ...form, reason: form.reason || undefined } });
+      toast('ok', '已送出申請');
+      setOpen(false);
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const decide = async (r: Row, action: 'approve' | 'reject') => {
+    try {
+      await api(`/hr/leaves/${r.id}/${action}`, { body: {} });
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>請假</h2>
+        {can('hr:write') && (
+          <button className="primary" onClick={() => setOpen(true)}>
+            新增申請
+          </button>
+        )}
+      </div>
+      <DataTable
+        loading={loading}
+        rows={data}
+        columns={[
+          { key: 'emp', label: '員工', render: (r) => `${r.employee.no} ${r.employee.name}` },
+          { key: 'type', label: '假別', render: (r) => LEAVE_LABEL[r.type] },
+          { key: 'start', label: '起', render: (r) => date(r.startDate) },
+          { key: 'end', label: '迄', render: (r) => date(r.endDate) },
+          { key: 'days', label: '天數', align: 'right' },
+          { key: 'reason', label: '事由' },
+          { key: 'status', label: '狀態', render: (r) => <StatusBadge status={r.status} /> },
+          {
+            key: 'op',
+            label: '',
+            render: (r) =>
+              can('hr:write') && r.status === 'PENDING' ? (
+                <span className="actions">
+                  <button onClick={() => decide(r, 'approve')}>核准</button>
+                  <button className="danger" onClick={() => decide(r, 'reject')}>駁回</button>
+                </span>
+              ) : null,
+          },
+        ]}
+      />
+      {open && (
+        <Modal title="請假申請" onClose={() => setOpen(false)}>
+          <form className="form" onSubmit={submit}>
+            <label>
+              <span>員工</span>
+              <select required value={form.employeeId ?? ''} onChange={(e) => setForm({ ...form, employeeId: e.target.value })}>
+                <option value="">請選擇</option>
+                {options.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>假別</span>
+              <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}>
+                {Object.entries(LEAVE_LABEL).map(([v, l]) => (
+                  <option key={v} value={v}>
+                    {l}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              <span>開始日</span>
+              <input type="date" required value={form.startDate} onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
+            </label>
+            <label>
+              <span>結束日</span>
+              <input type="date" required value={form.endDate} onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
+            </label>
+            <label>
+              <span>事由</span>
+              <input value={form.reason ?? ''} onChange={(e) => setForm({ ...form, reason: e.target.value })} />
+            </label>
+            <footer>
+              <button className="primary">送出</button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+    </section>
+  );
+}
