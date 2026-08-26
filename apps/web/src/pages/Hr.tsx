@@ -281,3 +281,81 @@ export function LeavesPage() {
     </section>
   );
 }
+
+export function PayrollPage() {
+  const { can } = useAuth();
+  const toast = useToast();
+  const [period, setPeriod] = useState(today().slice(0, 7));
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = () => {
+    setLoading(true);
+    api<Row[]>('/hr/payrolls', { query: { period } })
+      .then(setRows)
+      .finally(() => setLoading(false));
+  };
+  useEffect(load, [period]);
+
+  const run = async (path: string, okMsg: string) => {
+    try {
+      await api(path, { body: { period } });
+      toast('ok', okMsg);
+      load();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const setBonus = async (r: Row) => {
+    const v = prompt('獎金金額', String(Number(r.bonus)));
+    if (v === null) return;
+    try {
+      await api(`/hr/payrolls/${r.id}/bonus`, { method: 'PATCH', body: { bonus: Number(v) } });
+      load();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const total = rows.reduce((s, r) => s + Number(r.net), 0);
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>薪資</h2>
+        <div className="actions">
+          <input type="month" value={period} onChange={(e) => setPeriod(e.target.value)} />
+          {can('payroll:write') && (
+            <>
+              <button onClick={() => run('/hr/payrolls/generate', '已產生薪資單')}>產生薪資單</button>
+              <button className="primary" onClick={() => confirm(`確定發放 ${period} 薪資?`) && run('/hr/payrolls/pay', '薪資已發放並過帳')}>
+                發放薪資
+              </button>
+            </>
+          )}
+        </div>
+      </div>
+      <DataTable
+        loading={loading}
+        rows={rows}
+        columns={[
+          { key: 'emp', label: '員工', render: (r) => `${r.employee.no} ${r.employee.name}` },
+          { key: 'base', label: '底薪', align: 'right', render: (r) => money(r.base) },
+          { key: 'bonus', label: '獎金', align: 'right', render: (r) => money(r.bonus) },
+          { key: 'deduction', label: '勞健保', align: 'right', render: (r) => money(r.deduction) },
+          { key: 'tax', label: '扣繳稅額', align: 'right', render: (r) => money(r.tax) },
+          { key: 'net', label: '實發', align: 'right', render: (r) => money(r.net) },
+          { key: 'status', label: '狀態', render: (r) => <StatusBadge status={r.status === 'PAID' ? 'PAID' : 'DRAFT'} /> },
+          {
+            key: 'op',
+            label: '',
+            render: (r) =>
+              can('payroll:write') && r.status === 'DRAFT' ? <button onClick={() => setBonus(r)}>設定獎金</button> : null,
+          },
+        ]}
+      />
+      <div className="total">實發合計 {money(total)}</div>
+    </section>
+  );
+}
