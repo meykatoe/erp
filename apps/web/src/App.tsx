@@ -4,6 +4,7 @@ import { useAuth } from './auth/AuthContext';
 import { Layout } from './components/Layout';
 import { AccountsPage, InvoicesPage, JournalsPage, TrialBalancePage } from './pages/Accounting';
 import { ChangePassword } from './pages/ChangePassword';
+import { AttendancePage, DepartmentsPage, EmployeesPage, LeavesPage, PayrollPage } from './pages/Hr';
 import { InventoryPage, MovementsPage } from './pages/Inventory';
 import { Login } from './pages/Login';
 import { CategoriesPage, CustomersPage, ProductsPage, SuppliersPage, WarehousesPage } from './pages/MasterData';
@@ -51,6 +52,12 @@ export default function App() {
         <Route path="accounting/journals" element={<JournalsPage />} />
         <Route path="accounting/accounts" element={<AccountsPage />} />
         <Route path="accounting/trial-balance" element={<TrialBalancePage />} />
+
+        <Route path="hr/employees" element={<EmployeesPage />} />
+        <Route path="hr/departments" element={<DepartmentsPage />} />
+        <Route path="hr/attendance" element={<AttendancePage />} />
+        <Route path="hr/leaves" element={<LeavesPage />} />
+        <Route path="hr/payroll" element={<PayrollPage />} />
 
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
