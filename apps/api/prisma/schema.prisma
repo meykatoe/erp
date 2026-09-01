@@ -57,6 +57,36 @@ enum InvoiceStatus {
   VOID
 }
 
+enum EmployeeStatus {
+  ACTIVE
+  ON_LEAVE
+  RESIGNED
+}
+
+enum AttendanceStatus {
+  NORMAL
+  LATE
+  ABSENT
+}
+
+enum LeaveType {
+  ANNUAL
+  SICK
+  PERSONAL
+  OTHER
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PayrollStatus {
+  DRAFT
+  PAID
+}
+
 model User {
   id           String     @id @default(uuid())
   email        String     @unique
@@ -67,6 +97,7 @@ model User {
   updatedAt    DateTime   @updatedAt
   roles        UserRole[]
   auditLogs    AuditLog[]
+  employee     Employee?
 }
 
 model Role {
@@ -350,4 +381,71 @@ model Payment {
   note      String?
   createdBy String?
   invoice   Invoice  @relation(fields: [invoiceId], references: [id])
+}
+
+model Department {
+  id        String     @id @default(uuid())
+  name      String     @unique
+  employees Employee[]
+}
+
+model Employee {
+  id           String         @id @default(uuid())
+  no           String         @unique
+  name         String
+  departmentId String?
+  title        String?
+  hireDate     DateTime
+  salary       Decimal        @db.Decimal(18, 2)
+  status       EmployeeStatus @default(ACTIVE)
+  email        String?
+  phone        String?
+  userId       String?        @unique
+  department   Department?    @relation(fields: [departmentId], references: [id])
+  user         User?          @relation(fields: [userId], references: [id])
+  attendances  Attendance[]
+  leaves       LeaveRequest[]
+  payrolls     Payroll[]
+}
+
+model Attendance {
+  id         String           @id @default(uuid())
+  employeeId String
+  date       DateTime         @db.Date
+  checkIn    DateTime?
+  checkOut   DateTime?
+  status     AttendanceStatus @default(NORMAL)
+  employee   Employee         @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+}
+
+model LeaveRequest {
+  id         String      @id @default(uuid())
+  employeeId String
+  type       LeaveType
+  startDate  DateTime    @db.Date
+  endDate    DateTime    @db.Date
+  days       Decimal     @db.Decimal(5, 1)
+  reason     String?
+  status     LeaveStatus @default(PENDING)
+  approverId String?
+  createdAt  DateTime    @default(now())
+  employee   Employee    @relation(fields: [employeeId], references: [id])
+}
+
+model Payroll {
+  id         String        @id @default(uuid())
+  employeeId String
+  period     String
+  base       Decimal       @db.Decimal(18, 2)
+  bonus      Decimal       @default(0) @db.Decimal(18, 2)
+  deduction  Decimal       @default(0) @db.Decimal(18, 2)
+  tax        Decimal       @default(0) @db.Decimal(18, 2)
+  net        Decimal       @db.Decimal(18, 2)
+  status     PayrollStatus @default(DRAFT)
+  paidAt     DateTime?
+  employee   Employee      @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, period])
 }

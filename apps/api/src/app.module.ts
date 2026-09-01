@@ -6,6 +6,7 @@ import { AccountingModule } from './accounting/accounting.module';
 import { InventoryModule } from './inventory/inventory.module';
 import { PurchaseModule } from './purchase/purchase.module';
 import { SalesModule } from './sales/sales.module';
+import { HrModule } from './hr/hr.module';
 import { AuditInterceptor } from './audit/audit.interceptor';
 import { AuditModule } from './audit/audit.module';
 import { AuthModule } from './auth/auth.module';
@@ -41,6 +42,7 @@ import { UsersModule } from './users/users.module';
     InventoryModule,
     PurchaseModule,
     SalesModule,
+    HrModule,
     HealthModule,
   ],
   providers: [
