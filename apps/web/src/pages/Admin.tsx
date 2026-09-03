@@ -198,3 +198,28 @@ export function RolesPage() {
     </section>
   );
 }
+
+export function AuditPage() {
+  const { data, loading, page, setPage, search } = usePaged<Row>('/audit-logs');
+  return (
+    <section>
+      <div className="page-head">
+        <h2>稽核紀錄</h2>
+        <input className="search" placeholder="依路徑搜尋…" onChange={(e) => search(e.target.value)} />
+      </div>
+      <DataTable
+        loading={loading}
+        rows={data?.items ?? []}
+        columns={[
+          { key: 'createdAt', label: '時間', render: (r) => datetime(r.createdAt) },
+          { key: 'user', label: '使用者', render: (r) => r.user?.name ?? '-' },
+          { key: 'action', label: '動作' },
+          { key: 'entity', label: '路徑' },
+          { key: 'status', label: '結果', render: (r) => <StatusBadge status={r.status < 400 ? 'ACTIVE' : 'ABSENT'} /> },
+          { key: 'ip', label: 'IP' },
+        ]}
+      />
+      {data && <Pagination page={page} totalPages={data.totalPages} total={data.total} onChange={setPage} />}
+    </section>
+  );
+}
