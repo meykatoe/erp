@@ -85,3 +85,116 @@ export function UsersPage() {
     </>
   );
 }
+
+export function RolesPage() {
+  const { data, reload } = useList<Row>('/roles');
+  const { can } = useAuth();
+  const toast = useToast();
+  const [all, setAll] = useState<string[]>([]);
+  const [editing, setEditing] = useState<Row | 'new' | null>(null);
+  const [name, setName] = useState('');
+  const [desc, setDesc] = useState('');
+  const [perms, setPerms] = useState<string[]>([]);
+
+  useEffect(() => {
+    api<string[]>('/roles/permissions').then(setAll).catch(() => {});
+  }, []);
+
+  const open = (r: Row | 'new') => {
+    setEditing(r);
+    setName(r === 'new' ? '' : r.name);
+    setDesc(r === 'new' ? '' : (r.description ?? ''));
+    setPerms(r === 'new' ? [] : r.permissions);
+  };
+
+  const save = async (e: FormEvent) => {
+    e.preventDefault();
+    try {
+      if (editing === 'new') {
+        await api('/roles', { body: { name, description: desc, permissions: perms } });
+      } else if (editing) {
+        await api(`/roles/${editing.id}`, { method: 'PATCH', body: { description: desc, permissions: perms } });
+      }
+      toast('ok', '已儲存');
+      setEditing(null);
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const remove = async (r: Row) => {
+    if (!confirm(`確定刪除角色 ${r.name}?`)) return;
+    try {
+      await api(`/roles/${r.id}`, { method: 'DELETE' });
+      reload();
+    } catch (err) {
+      toast('error', (err as Error).message);
+    }
+  };
+
+  const toggle = (p: string) => setPerms((s) => (s.includes(p) ? s.filter((x) => x !== p) : [...s, p]));
+
+  return (
+    <section>
+      <div className="page-head">
+        <h2>角色權限</h2>
+        {can('role:write') && (
+          <button className="primary" onClick={() => open('new')}>
+            新增角色
+          </button>
+        )}
+      </div>
+      <DataTable
+        rows={data}
+        columns={[
+          { key: 'name', label: '角色' },
+          { key: 'description', label: '說明' },
+          { key: 'perms', label: '權限數', align: 'right', render: (r) => r.permissions.length },
+          { key: 'users', label: '使用者數', align: 'right', render: (r) => r._count.users },
+          {
+            key: 'op',
+            label: '',
+            render: (r) =>
+              can('role:write') && r.name !== 'admin' ? (
+                <button className="danger" onClick={(e) => (e.stopPropagation(), remove(r))}>
+                  刪除
+                </button>
+              ) : null,
+          },
+        ]}
+        onRowClick={can('role:write') ? open : undefined}
+      />
+      {editing && (
+        <Modal title={editing === 'new' ? '新增角色' : `編輯 ${editing.name}`} onClose={() => setEditing(null)} wide>
+          <form className="form" onSubmit={save}>
+            {editing === 'new' && (
+              <label>
+                <span>角色名稱</span>
+                <input value={name} onChange={(e) => setName(e.target.value)} required />
+              </label>
+            )}
+            <label>
+              <span>說明</span>
+              <input value={desc} onChange={(e) => setDesc(e.target.value)} />
+            </label>
+            <div className="perm-grid">
+              {all.map((p) => (
+                <label key={p} className="check">
+                  <input type="checkbox" checked={perms.includes(p)} onChange={() => toggle(p)} />
+                  <span>{p}</span>
+                </label>
+              ))}
+            </div>
+            <footer>
+              <button type="button" onClick={() => setEditing(null)}>
+                取消
+              </button>
+              <button className="primary">儲存</button>
+            </footer>
+          </form>
+        </Modal>
+      )}
+    </section>
+  );
+}
