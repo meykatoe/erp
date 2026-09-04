@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from './auth/AuthContext';
 import { Layout } from './components/Layout';
 import { AccountsPage, InvoicesPage, JournalsPage, TrialBalancePage } from './pages/Accounting';
+import { AuditPage, RolesPage, UsersPage } from './pages/Admin';
 import { ChangePassword } from './pages/ChangePassword';
 import { AttendancePage, DepartmentsPage, EmployeesPage, LeavesPage, PayrollPage } from './pages/Hr';
 import { InventoryPage, MovementsPage } from './pages/Inventory';
@@ -59,6 +60,9 @@ export default function App() {
         <Route path="hr/leaves" element={<LeavesPage />} />
         <Route path="hr/payroll" element={<PayrollPage />} />
 
+        <Route path="admin/users" element={<UsersPage />} />
+        <Route path="admin/roles" element={<RolesPage />} />
+        <Route path="admin/audit" element={<AuditPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
