@@ -47,4 +47,18 @@ export class ReportsService {
       inventoryValue: round2(sum(levels.map((l) => l.quantity.mul(l.product.cost)))),
     };
   }
+
+  async salesByMonth(months = 12) {
+    const rows = await this.prisma.$queryRaw<{ month: string; total: string; orders: bigint }[]>`
+      SELECT to_char(date_trunc('month', "orderDate"), 'YYYY-MM') AS month,
+             SUM(total)::text AS total,
+             COUNT(*) AS orders
+      FROM "SalesOrder"
+      WHERE status IN ('CONFIRMED', 'PARTIALLY_SHIPPED', 'SHIPPED')
+        AND "orderDate" >= date_trunc('month', now()) - make_interval(months => ${months - 1})
+      GROUP BY 1
+      ORDER BY 1
+    `;
+    return rows.map((r) => ({ month: r.month, total: Number(r.total), orders: Number(r.orders) }));
+  }
 }
