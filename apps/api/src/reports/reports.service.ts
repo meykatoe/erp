@@ -61,4 +61,23 @@ export class ReportsService {
     `;
     return rows.map((r) => ({ month: r.month, total: Number(r.total), orders: Number(r.orders) }));
   }
+
+  async topProducts(limit = 10) {
+    const items = await this.prisma.salesOrderItem.groupBy({
+      by: ['productId'],
+      _sum: { shippedQty: true, amount: true },
+      orderBy: { _sum: { amount: 'desc' } },
+      take: limit,
+    });
+    const products = await this.prisma.product.findMany({
+      where: { id: { in: items.map((i) => i.productId) } },
+    });
+    const byId = new Map(products.map((p) => [p.id, p]));
+    return items.map((i) => ({
+      sku: byId.get(i.productId)?.sku,
+      name: byId.get(i.productId)?.name,
+      quantity: i._sum.shippedQty,
+      amount: i._sum.amount,
+    }));
+  }
 }
