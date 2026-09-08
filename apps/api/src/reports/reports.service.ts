@@ -80,4 +80,25 @@ export class ReportsService {
       amount: i._sum.amount,
     }));
   }
+
+  async inventoryValuation() {
+    const levels = await this.prisma.stockLevel.findMany({
+      include: { product: true, warehouse: true },
+    });
+    const byWarehouse = new Map<
+      string,
+      { code: string; name: string; value: ReturnType<typeof D> }
+    >();
+    for (const l of levels) {
+      const row = byWarehouse.get(l.warehouseId) ?? {
+        code: l.warehouse.code,
+        name: l.warehouse.name,
+        value: D(0),
+      };
+      row.value = row.value.add(l.quantity.mul(l.product.cost));
+      byWarehouse.set(l.warehouseId, row);
+    }
+    const rows = [...byWarehouse.values()].map((r) => ({ ...r, value: round2(r.value) }));
+    return { rows, total: round2(sum(rows.map((r) => r.value))) };
+  }
 }
