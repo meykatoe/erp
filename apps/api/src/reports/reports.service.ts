@@ -101,4 +101,33 @@ export class ReportsService {
     const rows = [...byWarehouse.values()].map((r) => ({ ...r, value: round2(r.value) }));
     return { rows, total: round2(sum(rows.map((r) => r.value))) };
   }
+
+  async incomeStatement(from?: Date, to?: Date) {
+    const lines = await this.prisma.journalLine.findMany({
+      where: {
+        entry: { status: 'POSTED', date: { gte: from, lte: to } },
+        account: { type: { in: ['REVENUE', 'EXPENSE'] } },
+      },
+      include: { account: true },
+    });
+    const acc = new Map<
+      string,
+      { code: string; name: string; type: string; amount: ReturnType<typeof D> }
+    >();
+    for (const l of lines) {
+      const sign = l.account.type === 'REVENUE' ? l.credit.sub(l.debit) : l.debit.sub(l.credit);
+      const row = acc.get(l.accountId) ?? {
+        code: l.account.code,
+        name: l.account.name,
+        type: l.account.type,
+        amount: D(0),
+      };
+      row.amount = row.amount.add(sign);
+      acc.set(l.accountId, row);
+    }
+    const rows = [...acc.values()].sort((a, b) => a.code.localeCompare(b.code));
+    const revenue = sum(rows.filter((r) => r.type === 'REVENUE').map((r) => r.amount));
+    const expense = sum(rows.filter((r) => r.type === 'EXPENSE').map((r) => r.amount));
+    return { rows, revenue, expense, netIncome: revenue.sub(expense) };
+  }
 }
