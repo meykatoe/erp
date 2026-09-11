@@ -12,4 +12,9 @@ export class ReportsController {
   dashboard() {
     return this.service.dashboard();
   }
+
+  @Get('sales-by-month')
+  salesByMonth(@Query('months') months?: string) {
+    return this.service.salesByMonth(months ? Math.min(36, Math.max(1, Number(months))) : 12);
+  }
 }
