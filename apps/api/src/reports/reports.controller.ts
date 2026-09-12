@@ -17,4 +17,9 @@ export class ReportsController {
   salesByMonth(@Query('months') months?: string) {
     return this.service.salesByMonth(months ? Math.min(36, Math.max(1, Number(months))) : 12);
   }
+
+  @Get('top-products')
+  top(@Query('limit') limit?: string) {
+    return this.service.topProducts(limit ? Math.min(50, Number(limit)) : 10);
+  }
 }
