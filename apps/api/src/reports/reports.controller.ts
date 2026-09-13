@@ -22,4 +22,9 @@ export class ReportsController {
   top(@Query('limit') limit?: string) {
     return this.service.topProducts(limit ? Math.min(50, Number(limit)) : 10);
   }
+
+  @Get('inventory-valuation')
+  valuation() {
+    return this.service.inventoryValuation();
+  }
 }
