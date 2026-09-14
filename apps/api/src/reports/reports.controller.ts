@@ -27,4 +27,12 @@ export class ReportsController {
   valuation() {
     return this.service.inventoryValuation();
   }
+
+  @Get('income-statement')
+  income(@Query('from') from?: string, @Query('to') to?: string) {
+    return this.service.incomeStatement(
+      from ? new Date(from) : undefined,
+      to ? new Date(to) : undefined,
+    );
+  }
 }
