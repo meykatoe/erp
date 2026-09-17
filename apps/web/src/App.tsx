@@ -5,6 +5,7 @@ import { Layout } from './components/Layout';
 import { AccountsPage, InvoicesPage, JournalsPage, TrialBalancePage } from './pages/Accounting';
 import { AuditPage, RolesPage, UsersPage } from './pages/Admin';
 import { ChangePassword } from './pages/ChangePassword';
+import { Dashboard } from './pages/Dashboard';
 import { AttendancePage, DepartmentsPage, EmployeesPage, LeavesPage, PayrollPage } from './pages/Hr';
 import { InventoryPage, MovementsPage } from './pages/Inventory';
 import { Login } from './pages/Login';
@@ -29,6 +30,7 @@ export default function App() {
           </RequireAuth>
         }
       >
+        <Route index element={<Dashboard />} />
         <Route path="password" element={<ChangePassword />} />
 
         <Route path="sales" element={<OrderListPage cfg={SALES} />} />
