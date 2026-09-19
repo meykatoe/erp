@@ -121,3 +121,10 @@ tr.clickable:hover { background: color-mix(in srgb, var(--primary) 6%, transpare
 .tabs { display: flex; gap: 4px; margin-bottom: 16px; }
 .tabs button.on { background: var(--primary); color: var(--primary-text); border-color: var(--primary); }
 .perm-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+
+@media (max-width: 860px) {
+  .shell { grid-template-columns: 1fr; }
+  aside { display: none; }
+  .split { grid-template-columns: 1fr; }
+  main { padding: 16px; }
+}
