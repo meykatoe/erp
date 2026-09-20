@@ -5,12 +5,14 @@ import { Layout } from './components/Layout';
 import { AccountsPage, InvoicesPage, JournalsPage, TrialBalancePage } from './pages/Accounting';
 import { AuditPage, RolesPage, UsersPage } from './pages/Admin';
 import { ChangePassword } from './pages/ChangePassword';
+import { Dashboard } from './pages/Dashboard';
 import { AttendancePage, DepartmentsPage, EmployeesPage, LeavesPage, PayrollPage } from './pages/Hr';
 import { InventoryPage, MovementsPage } from './pages/Inventory';
 import { Login } from './pages/Login';
 import { CategoriesPage, CustomersPage, ProductsPage, SuppliersPage, WarehousesPage } from './pages/MasterData';
 import { OrderDetailPage, OrderFormPage, OrderListPage } from './pages/Orders';
 import { PURCHASE, SALES } from './pages/orders.config';
+import { ReportsPage } from './pages/Reports';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { user, loading } = useAuth();
@@ -29,6 +31,7 @@ export default function App() {
           </RequireAuth>
         }
       >
+        <Route index element={<Dashboard />} />
         <Route path="password" element={<ChangePassword />} />
 
         <Route path="sales" element={<OrderListPage cfg={SALES} />} />
@@ -59,6 +62,8 @@ export default function App() {
         <Route path="hr/attendance" element={<AttendancePage />} />
         <Route path="hr/leaves" element={<LeavesPage />} />
         <Route path="hr/payroll" element={<PayrollPage />} />
+
+        <Route path="reports" element={<ReportsPage />} />
 
         <Route path="admin/users" element={<UsersPage />} />
         <Route path="admin/roles" element={<RolesPage />} />
