@@ -1,0 +1,12 @@
+{
+  "name": "erp",
+  "version": "1.0.0",
+  "private": true,
+  "description": "企業資源規劃系統",
+  "scripts": {
+    "dev:api": "npm --prefix apps/api run start:dev",
+    "dev:web": "npm --prefix apps/web run dev",
+    "test": "npm --prefix apps/api test",
+    "build": "npm --prefix apps/api run build && npm --prefix apps/web run build"
+  }
+}
