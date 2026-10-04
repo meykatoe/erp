@@ -33,3 +33,26 @@
    ```
 
 4. 以管理員登入並立即修改密碼,再建立實際使用者與角色。
+
+## HTTPS
+
+容器內的 Nginx 只提供 HTTP。正式環境請在前面放置終止 TLS 的反向代理
+(如 Caddy、Traefik 或雲端負載平衡器),並將 `HTTP_PORT` 改為僅本機可存取的埠。
+
+Caddy 範例:
+
+```
+erp.example.com {
+  reverse_proxy 127.0.0.1:8080
+}
+```
+
+## 升級
+
+```bash
+git pull
+./scripts/backup.sh
+docker compose up -d --build
+```
+
+資料庫遷移在 API 啟動時自動套用。升級前務必先備份。
