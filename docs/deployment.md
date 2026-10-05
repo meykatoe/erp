@@ -56,3 +56,12 @@ docker compose up -d --build
 ```
 
 資料庫遷移在 API 啟動時自動套用。升級前務必先備份。
+
+## 回復
+
+```bash
+git checkout <前一版 tag>
+docker compose up -d --build
+```
+
+若新版已套用不可逆的遷移,需先以備份還原資料庫,見 [維運手冊](operations.md)。
