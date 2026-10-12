@@ -42,3 +42,18 @@ export JWT_SECRET=test
 npx prisma migrate deploy && npx tsx prisma/seed.ts
 npm run test:e2e
 ```
+
+## 程式風格
+
+```bash
+npm run lint
+npm run format
+```
+
+## 新增模組
+
+1. 在 `prisma/schema.prisma` 新增模型並建立遷移
+2. 建立 `module / controller / service / dto`,controller 以 `@Perm()` 標示權限
+3. 新權限加入 `common/constants/permissions.ts`,並視需要加入預設角色
+4. 於 `app.module.ts` 註冊
+5. 補單元測試,關鍵流程補端對端測試
