@@ -57,3 +57,23 @@ make test
 ```
 
 端對端測試需要已套用遷移並完成 seed 的資料庫,見 [開發指南](docs/development.md)。
+
+## 文件
+
+- [架構設計](docs/architecture.md)
+- [業務規則](docs/business-rules.md)
+- [權限設計](docs/roles.md)
+- [API 概覽](docs/api.md)
+- [部署指南](docs/deployment.md)
+- [維運手冊](docs/operations.md)
+- [資安說明](docs/security.md)
+- [開發指南](docs/development.md)
+- [貢獻規範](CONTRIBUTING.md)
+- [變更紀錄](CHANGELOG.md)
+
+## 分支策略
+
+- main: 可上線版本,每次發版打 tag
+- develop: 整合分支
+- feature/*: 功能分支,完成後合併至 develop
+- chore/*: 工程雜務
