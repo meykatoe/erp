@@ -34,3 +34,26 @@ docker compose up -d --build
 
 啟動後開啟 http://localhost ,以 `.env` 中的 `ADMIN_EMAIL` 與 `ADMIN_PASSWORD` 登入。
 資料庫遷移與初始資料會在 API 容器啟動時自動執行。
+
+## 本機開發
+
+需求: Node.js 24、PostgreSQL 15 以上。
+
+```bash
+make install
+cp apps/api/.env.example apps/api/.env   # 調整 DATABASE_URL
+cd apps/api && npx prisma migrate dev && npm run db:seed
+make dev-api      # http://localhost:3000/api/docs
+make dev-web      # http://localhost:5173
+```
+
+預設管理員為 `admin@example.com`,密碼取自 `ADMIN_PASSWORD`(開發環境預設 `Admin12345`)。
+設定 `SEED_DEMO=1` 再執行 seed 可匯入示範資料。
+
+## 測試
+
+```bash
+make test
+```
+
+端對端測試需要已套用遷移並完成 seed 的資料庫,見 [開發指南](docs/development.md)。
