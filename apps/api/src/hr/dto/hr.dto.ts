@@ -115,3 +115,9 @@ export class BonusDto {
   @Min(0)
   bonus!: number;
 }
+
+export class EmployeeQueryDto extends PageQueryDto {
+  @IsOptional()
+  @IsString()
+  departmentId?: string;
+}

@@ -4,12 +4,12 @@ import { ACCOUNT } from '../accounting/account-codes';
 import { AccountingService, PostLine } from '../accounting/accounting.service';
 import { D, sum } from '../common/utils/money';
 import { pageArgs, toPage } from '../common/utils/paginate';
-import { PageQueryDto } from '../common/dto/page-query.dto';
 import { PrismaService } from '../prisma/prisma.service';
 import { SequenceService } from '../sequence/sequence.service';
 import {
   CreateEmployeeDto,
   CreateLeaveDto,
+  EmployeeQueryDto,
   UpdateEmployeeDto,
 } from './dto/hr.dto';
 import { calcPayroll, isLate, leaveDays } from './payroll.calc';
@@ -42,7 +42,7 @@ export class HrService {
     return { ok: true };
   }
 
-  async employees(q: PageQueryDto & { departmentId?: string }) {
+  async employees(q: EmployeeQueryDto) {
     const where: Prisma.EmployeeWhereInput = {
       departmentId: q.departmentId,
       ...(q.keyword && {
