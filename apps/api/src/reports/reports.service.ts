@@ -55,7 +55,7 @@ export class ReportsService {
              COUNT(*) AS orders
       FROM "SalesOrder"
       WHERE status IN ('CONFIRMED', 'PARTIALLY_SHIPPED', 'SHIPPED')
-        AND "orderDate" >= date_trunc('month', now()) - make_interval(months => ${months - 1})
+        AND "orderDate" >= date_trunc('month', now()) - make_interval(months => ${months - 1}::int)
       GROUP BY 1
       ORDER BY 1
     `;
