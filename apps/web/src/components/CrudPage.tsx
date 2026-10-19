@@ -67,8 +67,8 @@ export function CrudPage<T extends { id: string }>(p: Props<T>) {
   const [values, setValues] = useState<Record<string, unknown>>({});
   const [busy, setBusy] = useState(false);
 
-  const pagedState = usePaged<T>(p.paged === false ? '/__none__' : p.endpoint);
-  const listState = useList<T>(p.paged === false ? p.endpoint : '/__none__');
+  const pagedState = usePaged<T>(p.paged === false ? null : p.endpoint);
+  const listState = useList<T>(p.paged === false ? p.endpoint : null);
   const rows = p.paged === false ? listState.data : (pagedState.data?.items ?? []);
   const loading = p.paged === false ? listState.loading : pagedState.loading;
   const error = p.paged === false ? listState.error : pagedState.error;

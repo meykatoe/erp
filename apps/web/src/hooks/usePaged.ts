@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { api, Page } from '../api/client';
 
-export function usePaged<T>(path: string, extra: Record<string, string | undefined> = {}) {
+export function usePaged<T>(path: string | null, extra: Record<string, string | undefined> = {}) {
   const [page, setPage] = useState(1);
   const [keyword, setKeyword] = useState('');
   const [data, setData] = useState<Page<T> | null>(null);
@@ -10,6 +10,7 @@ export function usePaged<T>(path: string, extra: Record<string, string | undefin
   const extraKey = JSON.stringify(extra);
 
   const reload = useCallback(() => {
+    if (!path) return setLoading(false);
     setLoading(true);
     api<Page<T>>(path, { query: { page, keyword, ...JSON.parse(extraKey) } })
       .then((d) => {
@@ -30,12 +31,13 @@ export function usePaged<T>(path: string, extra: Record<string, string | undefin
   return { data, loading, error, page, setPage, search, reload };
 }
 
-export function useList<T>(path: string) {
+export function useList<T>(path: string | null) {
   const [data, setData] = useState<T[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const reload = useCallback(() => {
+    if (!path) return setLoading(false);
     setLoading(true);
     api<T[]>(path)
       .then((d) => {
