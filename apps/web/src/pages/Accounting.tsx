@@ -5,7 +5,7 @@ import { CrudPage } from '../components/CrudPage';
 import { DataTable } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { Pagination } from '../components/Pagination';
-import { StatusBadge } from '../components/StatusBadge';
+import { ActiveBadge, OkBadge, StatusBadge } from '../components/StatusBadge';
 import { useToast } from '../components/Toast';
 import { usePaged } from '../hooks/usePaged';
 import { date, money } from '../lib/format';
@@ -38,7 +38,7 @@ export function AccountsPage() {
         { key: 'code', label: '代碼' },
         { key: 'name', label: '名稱' },
         { key: 'type', label: '類型', render: (r) => ACCOUNT_TYPE_LABEL[r.type] },
-        { key: 'active', label: '狀態', render: (r) => <StatusBadge status={r.active ? 'ACTIVE' : 'RESIGNED'} /> },
+        { key: 'active', label: '狀態', render: (r) => <ActiveBadge active={r.active} /> },
       ]}
     />
   );
@@ -318,7 +318,7 @@ export function TrialBalancePage() {
     <section>
       <div className="page-head">
         <h2>試算表</h2>
-        {data && <StatusBadge status={data.balanced ? 'ACTIVE' : 'ABSENT'} />}
+        {data && <OkBadge ok={data.balanced} yes="借貸平衡" no="借貸不平衡" />}
       </div>
       <DataTable
         rows={data?.rows ?? []}

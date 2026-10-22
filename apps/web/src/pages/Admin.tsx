@@ -5,7 +5,7 @@ import { CrudPage } from '../components/CrudPage';
 import { DataTable } from '../components/DataTable';
 import { Modal } from '../components/Modal';
 import { Pagination } from '../components/Pagination';
-import { StatusBadge } from '../components/StatusBadge';
+import { ActiveBadge, OkBadge } from '../components/StatusBadge';
 import { useToast } from '../components/Toast';
 import { useList, usePaged } from '../hooks/usePaged';
 import { useOptions } from '../hooks/useOptions';
@@ -50,7 +50,7 @@ export function UsersPage() {
           { key: 'email', label: '電子郵件' },
           { key: 'name', label: '姓名' },
           { key: 'roles', label: '角色', render: (r) => r.roles.map((x: Row) => x.role.name).join('、') },
-          { key: 'active', label: '狀態', render: (r) => <StatusBadge status={r.active ? 'ACTIVE' : 'RESIGNED'} /> },
+          { key: 'active', label: '狀態', render: (r) => <ActiveBadge active={r.active} /> },
           {
             key: 'op',
             label: '',
@@ -215,7 +215,7 @@ export function AuditPage() {
           { key: 'user', label: '使用者', render: (r) => r.user?.name ?? '-' },
           { key: 'action', label: '動作' },
           { key: 'entity', label: '路徑' },
-          { key: 'status', label: '結果', render: (r) => <StatusBadge status={r.status < 400 ? 'ACTIVE' : 'ABSENT'} /> },
+          { key: 'status', label: '結果', render: (r) => <OkBadge ok={r.status < 400} yes="成功" no="失敗" /> },
           { key: 'ip', label: 'IP' },
         ]}
       />
