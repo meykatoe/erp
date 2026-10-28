@@ -2,13 +2,13 @@ import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestj
 import { PERMISSIONS } from '../common/constants/permissions';
 import { AuthUser, CurrentUser } from '../common/decorators/current-user.decorator';
 import { Perm } from '../common/decorators/permissions.decorator';
-import { PageQueryDto } from '../common/dto/page-query.dto';
 import {
   BonusDto,
   ClockDto,
   CreateEmployeeDto,
   CreateLeaveDto,
   DepartmentDto,
+  EmployeeQueryDto,
   PeriodDto,
   UpdateEmployeeDto,
 } from './dto/hr.dto';
@@ -38,7 +38,7 @@ export class HrController {
 
   @Get('employees')
   @Perm(PERMISSIONS.HR_READ)
-  employees(@Query() q: PageQueryDto & { departmentId?: string }) {
+  employees(@Query() q: EmployeeQueryDto) {
     return this.service.employees(q);
   }
 

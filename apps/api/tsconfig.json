@@ -10,7 +10,6 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "incremental": true,
     "types": [
       "node",
       "jest"

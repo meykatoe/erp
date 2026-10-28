@@ -1,6 +1,6 @@
 import { Column } from '../components/DataTable';
 import { CrudPage, FieldDef } from '../components/CrudPage';
-import { StatusBadge } from '../components/StatusBadge';
+import { ActiveBadge } from '../components/StatusBadge';
 import { useOptions } from '../hooks/useOptions';
 import { money, qty } from '../lib/format';
 
@@ -9,7 +9,7 @@ type Row = { id: string } & Record<string, any>;
 const activeCol: Column<Row> = {
   key: 'active',
   label: '狀態',
-  render: (r) => <StatusBadge status={r.active ? 'ACTIVE' : 'RESIGNED'} />,
+  render: (r) => <ActiveBadge active={r.active} />,
 };
 
 export function ProductsPage() {
